@@ -4,9 +4,10 @@
 #include "cpu.h"
 
 int main() {
-	Display* display = new Display();
+	std::unique_ptr<Display> display;
+	std::unique_ptr<Memory> mem;
 	display->init();
-	CPU* cpu = new CPU();
+	std::unique_ptr<CPU> cpu;
 	cpu->build_ins_arr();
 	while (display->wait()) {}
 	display->kill();
