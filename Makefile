@@ -1,15 +1,14 @@
 TARGET=./build/nesem
 DIR=./build/
 CC=g++
-INC=./sdl2/include
-CLFAGS=-W -Wall -Wextra
-SRC=./src/*
+CFLAGS=-std=c++17
+SRC=./src/*.cpp
 
 all: $(TARGET)
 
-$(TARGET):
+$(TARGET): $(SRC)
 	mkdir -p $(DIR)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) -I$(INC) -lpthread -Llib -lSDL2 -lSDL2main
+	$(CC) $(CFLAGS) -o $@ $^ $(shell sdl2-config --cflags --libs)
 
 clean:
 	rm -r $(DIR)

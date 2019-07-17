@@ -1,6 +1,8 @@
 #include <iostream>
+#include "display.h"
 
 int main() {
-	std::cout << "Hello" << std::endl;
+	Display* display = new Display();
+	display->init();
 	return 0;
 }
