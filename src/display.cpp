@@ -21,3 +21,20 @@ bool Display::init() {
 	}
 	return true;
 }
+
+void Display::kill() {
+	if (renderer)
+		SDL_DestroyRenderer(renderer);
+	if (window)
+		SDL_DestroyWindow(window);
+	SDL_Quit();
+}
+
+bool Display::wait() {
+	SDL_Event event;
+	if (SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT)
+			return false;
+	}
+	return true;
+}
