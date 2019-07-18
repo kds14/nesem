@@ -13,7 +13,12 @@ void orA_imm(State* ctx) {
 	ctx->z = ctx->a == 0;
 }
 
-void CPU::build_ins_arr() {
-	ins[0x00] = brk;
-	ins[0x09] = orA_imm;
+void CPU::fde(State* ctx) {
+	uint8_t op = ctx->get_op();
+	switch (op) {
+		case 0x00:
+			brk(ctx);
+		case 0x09:
+			orA_imm(ctx);
+	}
 }

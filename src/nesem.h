@@ -3,8 +3,8 @@
 
 #include <memory>
 #include <vector>
+#include "mem.h"
 
-class Memory;
 class CPU;
 class PPU;
 class Display;
@@ -34,6 +34,10 @@ struct State {
 	std::unique_ptr<PPU> ppu;
 	std::unique_ptr<Display> disp;
 	State();
+	inline uint8_t get_op() { return mem->dget(pc); };
+	inline uint8_t get_b1() { return mem->dget(pc + 1); };
+	inline uint8_t get_b2() { return mem->dget(pc + 2); };
+	inline uint8_t get_16() { return mem->dget16(pc + 1); };
 };
 
 #endif

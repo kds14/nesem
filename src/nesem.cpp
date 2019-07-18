@@ -12,7 +12,6 @@ State::State() : mem (std::make_unique<Memory>(0x10000)), ppu_mem (std::make_uni
 int main() {
 	std::unique_ptr<State> ctx;
 	ctx->disp->init();
-	ctx->cpu->build_ins_arr();
 	while (ctx->disp->wait()) {}
 	ctx->disp->kill();
 	return 0;
