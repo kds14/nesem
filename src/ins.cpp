@@ -1,11 +1,11 @@
 #include "cpu.h"
 
-void brk(state* ctx) {
+void brk(State* ctx) {
 	ctx->pc += 2;
 	ctx->cycles += 7;
 }
 
-void orA_imm(state* ctx) {
+void orA_imm(State* ctx) {
 	ctx->cycles += 2;
 	ctx->a = ctx->pc + 1;
 	ctx->pc += 2;

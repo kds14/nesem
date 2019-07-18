@@ -3,7 +3,9 @@
 
 #include "nesem.h"
 
-typedef void (*cpu_ins)(state*);
+struct State;
+
+typedef void (*cpu_ins)(State*);
 
 class CPU {
 private:
