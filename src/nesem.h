@@ -32,10 +32,6 @@ struct State {
 	uint8_t ppu_mem[0x4000];
 	uint32_t prev_pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 	uint32_t pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
-	inline uint8_t get_op() { return mem[pc]; };
-	inline uint8_t get_b1() { return mem[pc + 1]; };
-	inline uint8_t get_b2() { return mem[pc + 2]; };
-	inline uint8_t get_16() { return mem[pc + 1]; };
 };
 
 #endif

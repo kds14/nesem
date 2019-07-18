@@ -7,7 +7,6 @@ struct State;
 
 class CPU {
 public:
-	CPU() {}
 	void fde(State* ctx);
 };
 
