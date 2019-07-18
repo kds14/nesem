@@ -3,11 +3,11 @@
 
 #include <memory>
 #include <vector>
+#include <iostream>
 #include "mem.h"
 
-class CPU;
-class PPU;
-class Display;
+const int SCREEN_WIDTH = 160;
+const int SCREEN_HEIGHT = 144;
 
 struct State {
 	uint8_t a = 0;
@@ -28,16 +28,14 @@ struct State {
 		};
 	};
 	uint64_t cycles = 0;
-	std::unique_ptr<Memory> mem;
-	std::unique_ptr<Memory> ppu_mem;
-	std::unique_ptr<CPU> cpu;
-	std::unique_ptr<PPU> ppu;
-	std::unique_ptr<Display> disp;
-	State();
-	inline uint8_t get_op() { return mem->dget(pc); };
-	inline uint8_t get_b1() { return mem->dget(pc + 1); };
-	inline uint8_t get_b2() { return mem->dget(pc + 2); };
-	inline uint8_t get_16() { return mem->dget16(pc + 1); };
+	uint8_t mem[0x10000];
+	uint8_t ppu_mem[0x4000];
+	uint32_t prev_pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
+	uint32_t pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
+	inline uint8_t get_op() { return mem[pc]; };
+	inline uint8_t get_b1() { return mem[pc + 1]; };
+	inline uint8_t get_b2() { return mem[pc + 2]; };
+	inline uint8_t get_16() { return mem[pc + 1]; };
 };
 
 #endif

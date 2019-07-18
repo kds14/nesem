@@ -1,7 +1,7 @@
 #include "cpu.h"
 
 void brk(State* ctx) {
-	ctx->pc += 2;
+	ctx->pc += 3;
 	ctx->cycles += 7;
 }
 
