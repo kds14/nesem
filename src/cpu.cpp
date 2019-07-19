@@ -60,6 +60,10 @@ uint8_t* get_zpx_ptr(State* ctx) {
 	return &ctx->mem[(get_b1(ctx) + ctx->x) % 0x100];
 }
 
+uint8_t* get_zpy_ptr(State* ctx) {
+	return &ctx->mem[(get_b1(ctx) + ctx->y) % 0x100];
+}
+
 uint8_t get_abs(State* ctx) {
 	return ctx->mem[get_16(ctx)];
 }
@@ -218,56 +222,56 @@ void LDA_indx(State* ctx) {
 	ctx->cycles += 6;
 }
 
-void orA(State* ctx, uint8_t operand) {
+void ORA(State* ctx, uint8_t operand) {
 	ctx->a |= operand;
 	ctx->n = ctx->a >> 7;
 	ctx->z = ctx->a == 0;
 }
 
-void orA_imm(State* ctx) {
-	orA(ctx, get_b1(ctx));
+void ORA_imm(State* ctx) {
+	ORA(ctx, get_b1(ctx));
 	ctx->pc += 2;
 	ctx->cycles += 2;
 }
 
-void orA_zp(State* ctx) {
-	orA(ctx, get_zp(ctx));
+void ORA_zp(State* ctx) {
+	ORA(ctx, get_zp(ctx));
 	ctx->pc += 2;
 	ctx->cycles += 3;
 }
 
-void orA_zpx(State* ctx) {
-	orA(ctx, get_zpx(ctx));
+void ORA_zpx(State* ctx) {
+	ORA(ctx, get_zpx(ctx));
 	ctx->pc += 2;
 	ctx->cycles += 4;
 }
 
-void orA_abs(State* ctx) {
-	orA(ctx, get_abs(ctx));
+void ORA_abs(State* ctx) {
+	ORA(ctx, get_abs(ctx));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
 
-void orA_absx(State* ctx) {
-	orA(ctx, get_absx(ctx));
+void ORA_absx(State* ctx) {
+	ORA(ctx, get_absx(ctx));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
 
-void orA_absy(State* ctx) {
-	orA(ctx, get_absy(ctx));
+void ORA_absy(State* ctx) {
+	ORA(ctx, get_absy(ctx));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
 
-void orA_indy(State* ctx) {
-	orA(ctx, get_indy(ctx));
+void ORA_indy(State* ctx) {
+	ORA(ctx, get_indy(ctx));
 	ctx->pc += 2;
 	ctx->cycles += 5;
 }
 
-void orA_indx(State* ctx) {
-	orA(ctx, get_indx(ctx));
+void ORA_indx(State* ctx) {
+	ORA(ctx, get_indx(ctx));
 	ctx->pc += 2;
 	ctx->cycles += 6;
 }
@@ -380,28 +384,6 @@ void INC_absx(State* ctx) {
 	ctx->cycles += 7;
 }
 
-void STA(State* ctx, uint8_t* ptr) {
-	*ptr = ctx->a;
-}
-
-void STA_zp(State* ctx) {
-	STA(ctx, get_zp_ptr(ctx));
-	ctx->pc += 2;
-	ctx->cycles += 3;
-}
-
-void STA_zpx(State* ctx) {
-	STA(ctx, get_zpx_ptr(ctx));
-	ctx->pc += 2;
-	ctx->cycles += 4;
-}
-
-void STA_abs(State* ctx) {
-	STA(ctx, get_abs_ptr(ctx));
-	ctx->pc += 3;
-	ctx->cycles += 4;
-}
-
 void LSR(State* ctx, uint8_t* ptr) {
 	uint8_t bit0 = *ptr & 0x1;
 	uint8_t res = *ptr >> 1;
@@ -441,6 +423,29 @@ void LSR_absx(State* ctx) {
 	ctx->cycles += 7;
 }
 
+
+void STA(State* ctx, uint8_t* ptr) {
+	*ptr = ctx->a;
+}
+
+void STA_zp(State* ctx) {
+	STA(ctx, get_zp_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 3;
+}
+
+void STA_zpx(State* ctx) {
+	STA(ctx, get_zpx_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 4;
+}
+
+void STA_abs(State* ctx) {
+	STA(ctx, get_abs_ptr(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 4;
+}
+
 void STA_absx(State* ctx) {
 	STA(ctx, get_absx_ptr(ctx));
 	ctx->pc += 3;
@@ -463,6 +468,128 @@ void STA_indx(State* ctx) {
 	STA(ctx, get_indx_ptr(ctx));
 	ctx->pc += 2;
 	ctx->cycles += 6;
+}
+
+void STX(State* ctx, uint8_t* ptr) {
+	*ptr = ctx->x;
+}
+
+void STX_zp(State* ctx) {
+	STX(ctx, get_zp_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 3;
+}
+
+void STX_zpy(State* ctx) {
+	STX(ctx, get_zpy_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 4;
+}
+
+void STX_abs(State* ctx) {
+	STX(ctx, get_abs_ptr(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 4;
+}
+
+void STY(State* ctx, uint8_t* ptr) {
+	*ptr = ctx->y;
+}
+
+void STY_zp(State* ctx) {
+	STY(ctx, get_zp_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 3;
+}
+
+void STY_zpx(State* ctx) {
+	STY(ctx, get_zpx_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 4;
+}
+
+void STY_abs(State* ctx) {
+	STY(ctx, get_abs_ptr(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 4;
+}
+
+void ROR(State* ctx, uint8_t* ptr) {
+	uint8_t bit0 = *ptr & 0x01;
+	uint8_t res = ctx->c << 7 | *ptr >> 1;
+	ctx->c = bit0;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	*ptr = res;
+}
+
+void ROR_acc(State* ctx) {
+	ROR(ctx, &ctx->a);
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void ROR_zp(State* ctx) {
+	ROR(ctx, get_zp_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 5;
+}
+
+void ROR_zpx(State* ctx) {
+	ROR(ctx, get_zpx_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 6;
+}
+
+void ROR_abs(State* ctx) {
+	ROR(ctx, get_abs_ptr(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 6;
+}
+
+void ROR_absx(State* ctx) {
+	ROR(ctx, get_absx_ptr(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 7;
+}
+
+void ROL(State* ctx, uint8_t* ptr) {
+	uint8_t bit7 = *ptr >> 7;
+	uint8_t res = *ptr << 1 | ctx->c;
+	ctx->c = bit7;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	*ptr = res;
+}
+
+void ROL_acc(State* ctx) {
+	ROL(ctx, &ctx->a);
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void ROL_zp(State* ctx) {
+	ROL(ctx, get_zp_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 5;
+}
+
+void ROL_zpx(State* ctx) {
+	ROL(ctx, get_zpx_ptr(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 6;
+}
+
+void ROL_abs(State* ctx) {
+	ROL(ctx, get_abs_ptr(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 6;
+}
+
+void ROL_absx(State* ctx) {
+	ROL(ctx, get_absx_ptr(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 7;
 }
 
 void ASL(State* ctx, uint8_t* ptr) {
@@ -670,6 +797,54 @@ void ADC_indx(State* ctx) {
 	ctx->cycles += 6;
 }
 
+void SBC_imm(State* ctx) {
+	ADC(ctx, ~get_b1(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 2;
+}
+
+void SBC_zp(State* ctx) {
+	ADC(ctx, ~get_zp(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 3;
+}
+
+void SBC_zpx(State* ctx) {
+	ADC(ctx, ~get_zpx(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 4;
+}
+
+void SBC_abs(State* ctx) {
+	ADC(ctx, ~get_abs(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 4;
+}
+
+void SBC_absx(State* ctx) {
+	ADC(ctx, ~get_absx(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 4;
+}
+
+void SBC_absy(State* ctx) {
+	ADC(ctx, ~get_absy(ctx));
+	ctx->pc += 3;
+	ctx->cycles += 4;
+}
+
+void SBC_indy(State* ctx) {
+	ADC(ctx, ~get_indy(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 5;
+}
+
+void SBC_indx(State* ctx) {
+	ADC(ctx, ~get_indx(ctx));
+	ctx->pc += 2;
+	ctx->cycles += 6;
+}
+
 void BIT(State* ctx, uint8_t operand) {
 	ctx->z = ctx->a & operand;
 	ctx->n = operand >> 7;
@@ -707,15 +882,129 @@ void push_stack(State* ctx, uint8_t val) {
 	ctx->mem[--ctx->s] = val;
 }
 
-uint8_t pop_stack(State* ctx, uint8_t val) {
+uint8_t pop_stack(State* ctx) {
 	return ctx->mem[ctx->s++];
+}
+
+void TXS(State* ctx) {
+	ctx->s = ctx->x;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void TSX(State* ctx) {
+	ctx->x = ctx->s;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void PHA(State* ctx) {
+	push_stack(ctx, ctx->a);
+	ctx->pc += 1;
+	ctx->cycles += 3;
+}
+
+void PLA(State* ctx) {
+	ctx->a = pop_stack(ctx);
+	ctx->pc += 1;
+	ctx->cycles += 4;
+}
+
+void PHP(State* ctx) {
+	push_stack(ctx, ctx->p);
+	ctx->pc += 1;
+	ctx->cycles += 3;
+}
+
+void PLP(State* ctx) {
+	ctx->p = pop_stack(ctx);
+	ctx->pc += 1;
+	ctx->cycles += 4;
+}
+
+void NOP(State* ctx) {
+	ctx->pc += 1;
+	ctx->cycles += 2;
 }
 
 void JSR(State* ctx) {
 	ctx->pc += 3;
 	ctx->cycles += 6;
-	push_stack(ctx, ctx->pc);
-	push_stack(ctx, ctx->pc - 1);
+	push_stack(ctx, ctx->pc >> 8);
+	push_stack(ctx, (ctx->pc - 1) & 0xFF);
+}
+
+void RTI(State* ctx) {
+	ctx->cycles += 6;
+	ctx->p = pop_stack(ctx);
+	uint16_t val = pop_stack(ctx);
+	ctx->pc = (pop_stack(ctx) << 8) | val;
+}
+
+void RTS(State* ctx) {
+	ctx->cycles += 6;
+	uint16_t val = pop_stack(ctx) + 1;
+	ctx->pc = (pop_stack(ctx) << 8) | val;
+}
+
+void TAX(State* ctx) {
+	ctx->x = ctx->a;
+	ctx->n = ctx->a >> 7;
+	ctx->z = ctx->a == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void TXA(State* ctx) {
+	ctx->a = ctx->x;
+	ctx->n = ctx->a >> 7;
+	ctx->z = ctx->a == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void TAY(State* ctx) {
+	ctx->y = ctx->a;
+	ctx->n = ctx->a >> 7;
+	ctx->z = ctx->a == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void TYA(State* ctx) {
+	ctx->a = ctx->y;
+	ctx->n = ctx->a >> 7;
+	ctx->z = ctx->a == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void DEX(State* ctx) {
+	ctx->n = --ctx->x >> 7;
+	ctx->z = ctx->x == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void INX(State* ctx) {
+	ctx->n = ++ctx->x >> 7;
+	ctx->z = ctx->x == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void DEY(State* ctx) {
+	ctx->n = --ctx->y >> 7;
+	ctx->z = ctx->y == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
+}
+
+void INY(State* ctx) {
+	ctx->n = ++ctx->y >> 7;
+	ctx->z = ctx->y == 0;
+	ctx->pc += 1;
+	ctx->cycles += 2;
 }
 
 	#include <bitset>
@@ -731,22 +1020,25 @@ void CPU::fde(State* ctx) {
 			brk(ctx);
 			break;
 		case 0x01:
-			orA_indx(ctx);
+			ORA_indx(ctx);
 			break;
 		case 0x05:
-			orA_zp(ctx);
+			ORA_zp(ctx);
 			break;
 		case 0x06:
 			ASL_zp(ctx);
 			break;
+		case 0x08:
+			PHP(ctx);
+			break;
 		case 0x09:
-			orA_imm(ctx);
+			ORA_imm(ctx);
 			break;
 		case 0x0A:
 			ASL_acc(ctx);
 			break;
 		case 0x0D:
-			orA_abs(ctx);
+			ORA_abs(ctx);
 			break;
 		case 0x0E:
 			ASL_abs(ctx);
@@ -755,10 +1047,10 @@ void CPU::fde(State* ctx) {
 			branch(ctx, !ctx->n);
 			break;
 		case 0x11:
-			orA_indy(ctx);
+			ORA_indy(ctx);
 			break;
 		case 0x15:
-			orA_zpx(ctx);
+			ORA_zpx(ctx);
 			break;
 		case 0x16:
 			ASL_zpx(ctx);
@@ -768,10 +1060,10 @@ void CPU::fde(State* ctx) {
 			set_p(ctx, 0x1, false);
 			break;
 		case 0x19:
-			orA_absy(ctx);
+			ORA_absy(ctx);
 			break;
 		case 0x1D:
-			orA_absx(ctx);
+			ORA_absx(ctx);
 			break;
 		case 0x1E:
 			ASL_absx(ctx);
@@ -788,14 +1080,26 @@ void CPU::fde(State* ctx) {
 		case 0x25:
 			AND_zp(ctx);
 			break;
+		case 0x26:
+			ROL_zp(ctx);
+			break;
+		case 0x28:
+			PLP(ctx);
+			break;
 		case 0x29:
 			AND_imm(ctx);
+			break;
+		case 0x2A:
+			ROL_acc(ctx);
 			break;
 		case 0x2C:
 			BIT_abs(ctx);
 			break;
 		case 0x2D:
 			AND_abs(ctx);
+			break;
+		case 0x2E:
+			ROL_abs(ctx);
 			break;
 		case 0x30:
 			branch(ctx, ctx->n);
@@ -805,6 +1109,9 @@ void CPU::fde(State* ctx) {
 			break;
 		case 0x35:
 			AND_zpx(ctx);
+			break;
+		case 0x36:
+			ROL_zpx(ctx);
 			break;
 		case 0x38:
 			// SEC
@@ -816,6 +1123,12 @@ void CPU::fde(State* ctx) {
 		case 0x3D:
 			AND_absx(ctx);
 			break;
+		case 0x3E:
+			ROL_absx(ctx);
+			break;
+		case 0x40:
+			RTI(ctx);
+			break;
 		case 0x41:
 			EOR_indx(ctx);
 			break;
@@ -824,6 +1137,9 @@ void CPU::fde(State* ctx) {
 			break;
 		case 0x46:
 			LSR_zp(ctx);
+			break;
+		case 0x48:
+			PHA(ctx);
 			break;
 		case 0x49:
 			EOR_imm(ctx);
@@ -865,20 +1181,35 @@ void CPU::fde(State* ctx) {
 		case 0x5E:
 			LSR_absx(ctx);
 			break;
+		case 0x60:
+			RTS(ctx);
+			break;
 		case 0x61:
 			ADC_indx(ctx);
 			break;
 		case 0x65:
 			ADC_zp(ctx);
 			break;
+		case 0x66:
+			ROR_zp(ctx);
+			break;
+		case 0x68:
+			PLA(ctx);
+			break;
 		case 0x69:
 			ADC_imm(ctx);
+			break;
+		case 0x6A:
+			ROR_acc(ctx);
 			break;
 		case 0x6C:
 			JMP_ind(ctx);
 			break;
 		case 0x6D:
 			ADC_abs(ctx);
+			break;
+		case 0x6E:
+			ROR_abs(ctx);
 			break;
 		case 0x70:
 			branch(ctx, ctx->v);
@@ -888,6 +1219,9 @@ void CPU::fde(State* ctx) {
 			break;
 		case 0x75:
 			ADC_zpx(ctx);
+			break;
+		case 0x76:
+			ROR_zpx(ctx);
 			break;
 		case 0x78:
 			// SEI
@@ -899,14 +1233,35 @@ void CPU::fde(State* ctx) {
 		case 0x7D:
 			ADC_absx(ctx);
 			break;
+		case 0x7E:
+			ROR_absx(ctx);
+			break;
 		case 0x81:
 			STA_indx(ctx);
+			break;
+		case 0x84:
+			STY_zp(ctx);
 			break;
 		case 0x85:
 			STA_zp(ctx);
 			break;
+		case 0x86:
+			STX_zp(ctx);
+			break;
+		case 0x88:
+			DEY(ctx);
+			break;
+		case 0x8A:
+			TXA(ctx);
+			break;
+		case 0x8C:
+			STY_abs(ctx);
+			break;
 		case 0x8D:
 			STA_abs(ctx);
+			break;
+		case 0x8E:
+			STX_abs(ctx);
 			break;
 		case 0x90:
 			branch(ctx, !ctx->c);
@@ -914,11 +1269,23 @@ void CPU::fde(State* ctx) {
 		case 0x91:
 			STA_indy(ctx);
 			break;
+		case 0x94:
+			STY_zpx(ctx);
+			break;
 		case 0x95:
 			STA_zpx(ctx);
 			break;
+		case 0x96:
+			STX_zpy(ctx);
+			break;
+		case 0x98:
+			TYA(ctx);
+			break;
 		case 0x99:
 			STA_absy(ctx);
+			break;
+		case 0x9A:
+			TXS(ctx);
 			break;
 		case 0x9D:
 			STA_absx(ctx);
@@ -941,8 +1308,14 @@ void CPU::fde(State* ctx) {
 		case 0xA6:
 			LDX_zp(ctx);
 			break;
+		case 0xA8:
+			TAY(ctx);
+			break;
 		case 0xA9:
 			LDA_imm(ctx);
+			break;
+		case 0xAA:
+			TAX(ctx);
 			break;
 		case 0xAC:
 			LDY_abs(ctx);
@@ -975,6 +1348,9 @@ void CPU::fde(State* ctx) {
 		case 0xB9:
 			LDA_absy(ctx);
 			break;
+		case 0xBA:
+			TSX(ctx);
+			break;
 		case 0xBC:
 			LDY_absx(ctx);
 			break;
@@ -999,8 +1375,14 @@ void CPU::fde(State* ctx) {
 		case 0xC6:
 			DEC_zp(ctx);
 			break;
+		case 0xC8:
+			INY(ctx);
+			break;
 		case 0xC9:
 			CMP_imm(ctx, ctx->a);
+			break;
+		case 0xCA:
+			DEX(ctx);
 			break;
 		case 0xCC:
 			CMP_abs(ctx, ctx->y);
@@ -1039,14 +1421,32 @@ void CPU::fde(State* ctx) {
 		case 0xE0:
 			CMP_imm(ctx, ctx->x);
 			break;
+		case 0xE1:
+			SBC_indx(ctx);
+			break;
 		case 0xE4:
 			CMP_zp(ctx, ctx->x);
+			break;
+		case 0xE5:
+			SBC_zp(ctx);
 			break;
 		case 0xE6:
 			INC_zp(ctx);
 			break;
+		case 0xE8:
+			INX(ctx);
+			break;
+		case 0xE9:
+			SBC_imm(ctx);
+			break;
 		case 0xEC:
 			CMP_abs(ctx, ctx->x);
+			break;
+		case 0xEA:
+			NOP(ctx);
+			break;
+		case 0xED:
+			SBC_abs(ctx);
 			break;
 		case 0xEE:
 			INC_abs(ctx);
@@ -1054,12 +1454,24 @@ void CPU::fde(State* ctx) {
 		case 0xF0:
 			branch(ctx, ctx->z);
 			break;
+		case 0xF1:
+			SBC_indy(ctx);
+			break;
+		case 0xF5:
+			SBC_zpx(ctx);
+			break;
 		case 0xF6:
 			INC_zpx(ctx);
 			break;
 		case 0xF8:
 			// SED
 			set_p(ctx, 0x8, true);
+			break;
+		case 0xF9:
+			SBC_absy(ctx);
+			break;
+		case 0xFD:
+			SBC_absx(ctx);
 			break;
 		case 0xFE:
 			INC_absx(ctx);
