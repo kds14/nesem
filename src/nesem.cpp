@@ -4,7 +4,7 @@
 #include "mem.h"
 #include "ppu.h"
 #include "disp.h"
-#include <bitset>
+
 int main() {
 	std::unique_ptr<State> ctx = std::make_unique<State>();
 	std::unique_ptr<Display> disp = std::make_unique<Display>();
@@ -19,7 +19,7 @@ int main() {
 	ctx->p = 0xFF;
 	ctx->x = 0x3;
 	ctx->y = 0x4;
-	ctx->mem[0x2000] = 0x19;
+	ctx->mem[0x2000] = 0xA9;
 	ctx->mem[0x2001] = 0x02;
 	
 	disp->init(ctx.get(), 1);
