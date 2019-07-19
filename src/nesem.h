@@ -14,7 +14,7 @@ struct State {
 	uint8_t x = 0;
 	uint8_t y = 0;
 	uint16_t pc = 0;
-	uint8_t s = 0;
+	uint8_t s = 0xFF;
 	union {
 		uint8_t p = 0;
 		struct {
