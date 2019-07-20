@@ -5,87 +5,99 @@
  */
 
 uint16_t get_ind(State* ctx, uint8_t v) {
-	return ((uint16_t*)(&ctx->mem[v]))[0];
+	return ctx->cpu_mem.get16(v);
 }
 
 uint8_t get_op(State* ctx) {
-	return ctx->mem[ctx->pc];
+	return ctx->cpu_mem.get(ctx->pc);
 }
 
 uint8_t get_b1(State* ctx) {
-	return ctx->mem[ctx->pc + 1];
+	return ctx->cpu_mem.get(ctx->pc + 1);
 }
 
 uint8_t get_b2(State* ctx) {
-	return ctx->mem[ctx->pc + 2];
+	return ctx->cpu_mem.get(ctx->pc + 2);
 }
 
 uint16_t get_16(State* ctx) {
-	return ((uint16_t*)&ctx->mem[ctx->pc + 1])[0];
+	return ctx->cpu_mem.get16(ctx->pc + 1);
 }
 
 uint8_t get_indx(State* ctx) {
-	return ctx->mem[((uint16_t*)(&ctx->mem[get_b1(ctx) + ctx->x]))[0]];
+	return ctx->cpu_mem.get(get_ind(ctx, get_b1(ctx) + ctx->x));
 }
 
 uint8_t get_indy(State* ctx) {
-	return ctx->mem[get_ind(ctx, get_b1(ctx)) + ctx->y];
+	return ctx->cpu_mem.get(get_ind(ctx, get_b1(ctx)) + ctx->y);
 }
 
-uint8_t* get_indx_ptr(State* ctx) {
-	return &ctx->mem[((uint16_t*)(&ctx->mem[get_b1(ctx) + ctx->x]))[0]];
+uint16_t get_indx_ptr(State* ctx) {
+	return get_ind(ctx, get_b1(ctx) + ctx->x);
 }
 
-uint8_t* get_indy_ptr(State* ctx) {
-	return &ctx->mem[get_ind(ctx, get_b1(ctx)) + ctx->y];
+uint16_t get_indy_ptr(State* ctx) {
+	return get_ind(ctx, get_b1(ctx)) + ctx->y;
 }
 
 uint8_t get_zp(State* ctx) {
-	return ctx->mem[get_b1(ctx)];
+	return ctx->cpu_mem.get(get_b1(ctx));
 }
 
-uint8_t* get_zp_ptr(State* ctx) {
-	return &ctx->mem[get_b1(ctx)];
+uint16_t get_zp_ptr(State* ctx) {
+	return (get_b1(ctx));
 }
 
 uint8_t get_zpx(State* ctx) {
-	return ctx->mem[(get_b1(ctx) + ctx->x) % 0x100];
+	return ctx->cpu_mem.get((get_b1(ctx) + ctx->x) % 0x100);
 }
 
 uint8_t get_zpy(State* ctx) {
-	return ctx->mem[(get_b1(ctx) + ctx->y) % 0x100];
+	return ctx->cpu_mem.get((get_b1(ctx) + ctx->y) % 0x100);
 }
 
-uint8_t* get_zpx_ptr(State* ctx) {
-	return &ctx->mem[(get_b1(ctx) + ctx->x) % 0x100];
+uint16_t get_zpx_ptr(State* ctx) {
+	return ((get_b1(ctx) + ctx->x) % 0x100);
 }
 
-uint8_t* get_zpy_ptr(State* ctx) {
-	return &ctx->mem[(get_b1(ctx) + ctx->y) % 0x100];
+uint16_t get_zpy_ptr(State* ctx) {
+	return ((get_b1(ctx) + ctx->y) % 0x100);
 }
 
 uint8_t get_abs(State* ctx) {
-	return ctx->mem[get_16(ctx)];
+	return ctx->cpu_mem.get(get_16(ctx));
 }
 
-uint8_t* get_abs_ptr(State* ctx) {
-	return &ctx->mem[get_16(ctx)];
+uint16_t get_abs_ptr(State* ctx) {
+	return (get_16(ctx));
 }
 
 uint8_t get_absx(State* ctx) {
-	return ctx->mem[get_16(ctx) + ctx->x];
+	return ctx->cpu_mem.get(get_16(ctx) + ctx->x);
 }
 
-uint8_t* get_absx_ptr(State* ctx) {
-	return &ctx->mem[get_16(ctx) + ctx->x];
+uint16_t get_absx_ptr(State* ctx) {
+	return (get_16(ctx) + ctx->x);
 }
 
 uint8_t get_absy(State* ctx) {
-	return ctx->mem[get_16(ctx) + ctx->y];
+	return ctx->cpu_mem.get(get_16(ctx) + ctx->y);
 }
 
-uint8_t* get_absy_ptr(State* ctx) {
-	return &ctx->mem[get_16(ctx) + ctx->y];
+uint16_t get_absy_ptr(State* ctx) {
+	return (get_16(ctx) + ctx->y);
+}
+
+/*
+ * Stack helper functions
+ */
+
+void push_stack(State* ctx, uint8_t val) {
+	ctx->cpu_mem.set(val, --ctx->s);
+}
+
+uint8_t pop_stack(State* ctx) {
+	return ctx->cpu_mem.get(ctx->s++);
 }
 
 /*
@@ -99,7 +111,7 @@ void JMP_abs(State* ctx) {
 
 void JMP_ind(State* ctx) {
 	// TODO: bug when using last byte of page
-	ctx->pc = ((uint16_t*)(&ctx->mem[get_16(ctx)]))[0];
+	ctx->pc = ctx->cpu_mem.get16(get_16(ctx));
 	ctx->cycles = 5;
 }
 
@@ -330,8 +342,10 @@ void EOR_indx(State* ctx) {
 	ctx->cycles += 6;
 }
 
-void DEC_INC(State* ctx, uint8_t* ptr, bool inc) {
-	uint8_t val = inc ? ++(*ptr) : --(*ptr);
+void DEC_INC(State* ctx, uint16_t ptr, bool inc) {
+	uint8_t val = ctx->cpu_mem.get(ptr);
+	val = inc ? ++(val) : --(val);
+	ctx->cpu_mem.set(val, ptr);
 	ctx->n = (int8_t)val < 0;
 	ctx->z = val == 0;
 }
@@ -384,17 +398,24 @@ void INC_absx(State* ctx) {
 	ctx->cycles += 7;
 }
 
-void LSR(State* ctx, uint8_t* ptr) {
-	uint8_t bit0 = *ptr & 0x1;
-	uint8_t res = *ptr >> 1;
+void LSR(State* ctx, uint16_t ptr) {
+	uint8_t val = ctx->cpu_mem.get(ptr);
+	uint8_t bit0 = val & 0x1;
+	uint8_t res = val >> 1;
 	ctx->c = bit0;
 	ctx->n = res >> 7;
 	ctx->z = res == 0;
-	*ptr = res;
+	ctx->cpu_mem.set(res, ptr);
 }
 
 void LSR_acc(State* ctx) {
-	LSR(ctx, &ctx->a);
+	uint8_t val = ctx->a;
+	uint8_t bit0 = val & 0x1;
+	uint8_t res = val >> 1;
+	ctx->c = bit0;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	ctx->a = res;
 	ctx->pc += 1;
 	ctx->cycles += 2;
 }
@@ -423,9 +444,8 @@ void LSR_absx(State* ctx) {
 	ctx->cycles += 7;
 }
 
-
-void STA(State* ctx, uint8_t* ptr) {
-	*ptr = ctx->a;
+void STA(State* ctx, uint16_t ptr) {
+	ctx->cpu_mem.set(ctx->a, ptr);
 }
 
 void STA_zp(State* ctx) {
@@ -470,8 +490,8 @@ void STA_indx(State* ctx) {
 	ctx->cycles += 6;
 }
 
-void STX(State* ctx, uint8_t* ptr) {
-	*ptr = ctx->x;
+void STX(State* ctx, uint16_t ptr) {
+	ctx->cpu_mem.set(ctx->x, ptr);
 }
 
 void STX_zp(State* ctx) {
@@ -492,8 +512,8 @@ void STX_abs(State* ctx) {
 	ctx->cycles += 4;
 }
 
-void STY(State* ctx, uint8_t* ptr) {
-	*ptr = ctx->y;
+void STY(State* ctx, uint16_t ptr) {
+	ctx->cpu_mem.set(ctx->y, ptr);
 }
 
 void STY_zp(State* ctx) {
@@ -514,17 +534,23 @@ void STY_abs(State* ctx) {
 	ctx->cycles += 4;
 }
 
-void ROR(State* ctx, uint8_t* ptr) {
-	uint8_t bit0 = *ptr & 0x01;
-	uint8_t res = ctx->c << 7 | *ptr >> 1;
+void ROR(State* ctx, uint16_t ptr) {
+	uint8_t val = ctx->cpu_mem.get(ptr);
+	uint8_t bit0 = val & 0x01;
+	uint8_t res = ctx->c << 7 | val >> 1;
 	ctx->c = bit0;
 	ctx->n = res >> 7;
 	ctx->z = res == 0;
-	*ptr = res;
+	ctx->cpu_mem.set(res, ptr);
 }
 
 void ROR_acc(State* ctx) {
-	ROR(ctx, &ctx->a);
+	uint8_t bit0 = ctx->a & 0x01;
+	uint8_t res = ctx->c << 7 | ctx->a >> 1;
+	ctx->c = bit0;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	ctx->a = res;
 	ctx->pc += 1;
 	ctx->cycles += 2;
 }
@@ -553,17 +579,23 @@ void ROR_absx(State* ctx) {
 	ctx->cycles += 7;
 }
 
-void ROL(State* ctx, uint8_t* ptr) {
-	uint8_t bit7 = *ptr >> 7;
-	uint8_t res = *ptr << 1 | ctx->c;
+void ROL(State* ctx, uint16_t ptr) {
+	uint8_t val = ctx->cpu_mem.get(ptr);
+	uint8_t bit7 = val >> 7;
+	uint8_t res = val << 1 | ctx->c;
 	ctx->c = bit7;
 	ctx->n = res >> 7;
 	ctx->z = res == 0;
-	*ptr = res;
+	ctx->cpu_mem.set(res, ptr);
 }
 
 void ROL_acc(State* ctx) {
-	ROL(ctx, &ctx->a);
+	uint8_t bit7 = ctx->a >> 7;
+	uint8_t res = ctx->a << 1 | ctx->c;
+	ctx->c = bit7;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	ctx->a = res;
 	ctx->pc += 1;
 	ctx->cycles += 2;
 }
@@ -592,17 +624,24 @@ void ROL_absx(State* ctx) {
 	ctx->cycles += 7;
 }
 
-void ASL(State* ctx, uint8_t* ptr) {
-	uint8_t bit7 = *ptr >> 7;
-	uint8_t res = *ptr << 1;
+void ASL(State* ctx, uint16_t ptr) {
+	uint8_t val = ctx->cpu_mem.get(ptr);
+	uint8_t bit7 = val >> 7;
+	uint8_t res = val << 1;
 	ctx->c = bit7;
 	ctx->n = res >> 7;
 	ctx->z = res == 0;
-	*ptr = res;
+	ctx->cpu_mem.set(res, ptr);
 }
 
 void ASL_acc(State* ctx) {
-	ASL(ctx, &ctx->a);
+	uint8_t val = ctx->a;
+	uint8_t bit7 = val >> 7;
+	uint8_t res = val << 1;
+	ctx->c = bit7;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	ctx->a = res;
 	ctx->pc += 1;
 	ctx->cycles += 2;
 }
@@ -876,14 +915,6 @@ void set_p(State* ctx, uint8_t bit, bool set) {
 	ctx->p = set ? ctx->p | bit : ctx->p & ~bit;
 	ctx->pc += 1;
 	ctx->cycles += 2;
-}
-
-void push_stack(State* ctx, uint8_t val) {
-	ctx->mem[--ctx->s] = val;
-}
-
-uint8_t pop_stack(State* ctx) {
-	return ctx->mem[ctx->s++];
 }
 
 void TXS(State* ctx) {

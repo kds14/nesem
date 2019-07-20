@@ -28,8 +28,8 @@ struct State {
 		};
 	};
 	uint64_t cycles = 0;
-	uint8_t mem[0x10000];
-	uint8_t ppu_mem[0x4000];
+	CPU_Memory cpu_mem;
+	PPU_Memory ppu_mem;
 	uint32_t prev_pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 	uint32_t pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 };
