@@ -1,6 +1,11 @@
 #include "mem.h"
 
-CPU_Memory::CPU_Memory() : internal_RAM(false, 0x800), PPU_regs(false, 0x8), APU_IO_regs(false, 0x18), APU_IO_func(false, 0x8), cartridge(true, 0xBFE0) {
+CPU_Memory::CPU_Memory(uint8_t* buff) : internal_RAM(false, 0x800), PPU_regs(false, 0x8), APU_IO_regs(false, 0x18), APU_IO_func(false, 0x8), cartridge(false, 0x4000, buff + 0x10) {
+	
+}
+
+CPU_Memory::CPU_Memory() : internal_RAM(false, 0x800), PPU_regs(false, 0x8), APU_IO_regs(false, 0x18), APU_IO_func(false, 0x8), cartridge(false, 0x0) {
+	
 }
 
 PPU_Memory::PPU_Memory() : ptable0(false, 0x1000), ptable1(false, 0x1000), ntable0(false, 0x400), ntable1(false, 0x400), ntable2(false, 0x400), ntable3(false, 0x400), palette_ram_idx(true, 0x0020) {
@@ -16,7 +21,7 @@ uint8_t CPU_Memory:: get(uint16_t addr) {
 	} else if (addr < 0x4020) {
 		return APU_IO_func.dget((addr - 0x4018));
 	} else {
-		return cartridge.dget((addr - 0x4020));
+		return cartridge.dget((addr - 0x4020) % 0x4000);
 	}
 
 }
@@ -30,7 +35,7 @@ void CPU_Memory::set(uint8_t val, uint16_t addr) {
 	} else if (addr < 0x4020) {
 		return APU_IO_func.dset((addr - 0x4018), val);
 	} else {
-		return cartridge.dset((addr - 0x4020), val);
+		return cartridge.dset((addr - 0x4020) % 0x4000, val);
 	}
 
 }

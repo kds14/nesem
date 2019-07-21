@@ -13,8 +13,10 @@ private:
 	size_t sz;
 	std::unique_ptr<uint8_t[]> mem;
 public:
+	MemRegion(bool readonly, size_t sz, uint8_t* buff) : readonly(readonly), sz(sz),
+		mem(std::unique_ptr<uint8_t[]>(buff)) { };
 	MemRegion(bool readonly, size_t sz) : readonly(readonly), sz(sz),
-		mem(std::unique_ptr<uint8_t[]>(new uint8_t[sz])) { };
+		mem(std::unique_ptr<uint8_t[]>(new uint8_t[sz]())) { };
 	inline bool isROM() { return readonly; };
 	inline size_t size() { return sz; };
 	inline void dset(uint16_t addr, uint8_t val) { mem[addr] = val; }
@@ -26,6 +28,9 @@ public:
 		return (((uint16_t)dget(addr + 1)) << 8) | dget(addr);
 	}
 };
+
+class CPU_Memory;
+class PPU_Memory;
 
 class Memory {
 public:
@@ -51,6 +56,7 @@ private:
 public:
 	uint8_t get(uint16_t addr);
 	void set(uint8_t val, uint16_t addr);
+	CPU_Memory(uint8_t* buff);
 	CPU_Memory();
 };
 
@@ -69,5 +75,4 @@ public:
 	PPU_Memory();
 };
 
-void file2mem(std::string filename, CPU_Memory** cpu_mem, PPU_Memory** ppu_mem);
 #endif
