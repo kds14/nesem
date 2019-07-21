@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include "mem.h"
+#include <bitset>
 
 const int SCREEN_WIDTH = 160;
 const int SCREEN_HEIGHT = 144;
@@ -32,6 +33,14 @@ struct State {
 	PPU_Memory ppu_mem;
 	uint32_t prev_pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 	uint32_t pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
+	void print_state() {
+		State* ctx = this;
+		printf("%04X ", ctx->pc);
+		printf("%02X (", ctx->cpu_mem.get(ctx->pc));
+		printf("a: %02X , x: %02X, y: %02X, s: %02X, next: %02X %02X, ", ctx->a, ctx->x, ctx->y, ctx->s, ctx->cpu_mem.get(ctx->pc + 1), ctx->cpu_mem.get(ctx->pc + 2));
+		std::cout << std::bitset<8>(ctx->p) << ")" << std::endl;
+	}
+
 };
 
 #endif

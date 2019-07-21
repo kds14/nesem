@@ -53,10 +53,12 @@ private:
 	MemRegion APU_IO_regs;
 	MemRegion APU_IO_func;
 	MemRegion cartridge;
+	MemRegion work_ram;
+	int prg_cnt;
 public:
 	uint8_t get(uint16_t addr);
 	void set(uint8_t val, uint16_t addr);
-	CPU_Memory(uint8_t* buff);
+	CPU_Memory(uint8_t* buff, int prg_cnt);
 	CPU_Memory();
 };
 

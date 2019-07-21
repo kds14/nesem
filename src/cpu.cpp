@@ -93,11 +93,12 @@ uint16_t get_absy_ptr(State* ctx) {
  */
 
 void push_stack(State* ctx, uint8_t val) {
-	ctx->cpu_mem.set(val, --ctx->s);
+	ctx->cpu_mem.set(val, 0x100 + ctx->s--);
 }
 
 uint8_t pop_stack(State* ctx) {
-	return ctx->cpu_mem.get(ctx->s++);
+	uint8_t val = ctx->cpu_mem.get(0x100 + ++ctx->s);
+	return val;
 }
 
 /*
@@ -903,12 +904,12 @@ void BIT_abs(State* ctx) {
 }
 
 void branch(State* ctx, uint8_t condition) {
-	ctx->pc += 2;
-	ctx->cycles += 2;
 	if (condition) {
-		ctx->pc += (int8_t)get_op(ctx);
+		ctx->pc += (int8_t)get_b1(ctx);
 		ctx->cycles += 1;
 	}
+	ctx->pc += 2;
+	ctx->cycles += 2;
 }
 
 void set_p(State* ctx, uint8_t bit, bool set) {
@@ -942,7 +943,7 @@ void PLA(State* ctx) {
 }
 
 void PHP(State* ctx) {
-	push_stack(ctx, ctx->p);
+	push_stack(ctx, ctx->p | 0x30);
 	ctx->pc += 1;
 	ctx->cycles += 3;
 }
@@ -959,10 +960,13 @@ void NOP(State* ctx) {
 }
 
 void JSR(State* ctx) {
+	uint16_t npc = get_16(ctx);
 	ctx->pc += 3;
 	ctx->cycles += 6;
-	push_stack(ctx, ctx->pc >> 8);
-	push_stack(ctx, (ctx->pc - 1) & 0xFF);
+	uint16_t val = ctx->pc - 1;
+	push_stack(ctx, val >> 8);
+	push_stack(ctx, val & 0xFF);
+	ctx->pc = npc;
 }
 
 void RTI(State* ctx) {
@@ -974,8 +978,8 @@ void RTI(State* ctx) {
 
 void RTS(State* ctx) {
 	ctx->cycles += 6;
-	uint16_t val = pop_stack(ctx) + 1;
-	ctx->pc = (pop_stack(ctx) << 8) | val;
+	uint16_t val = pop_stack(ctx);
+	ctx->pc = ((pop_stack(ctx) << 8) | val) + 1;
 }
 
 void TAX(State* ctx) {
@@ -1041,11 +1045,6 @@ void INY(State* ctx) {
 	#include <bitset>
 void CPU::fde(State* ctx) {
 	uint8_t op = get_op(ctx);
-	std::cout << "A: " << (int)ctx->a << std::endl;	
-	std::cout << "P: " <<  std::bitset<8>(ctx->p) << std::endl;
-	std::cout << "B1: " << (int)get_b1(ctx) << std::endl;	
-	std::cout << "X: " << (int)ctx->x << std::endl;	
-	std::cout << "Y: " << (int)ctx->y << std::endl;	
 	switch (op) {
 		case 0x00:
 			brk(ctx);
@@ -1507,8 +1506,20 @@ void CPU::fde(State* ctx) {
 		case 0xFE:
 			INC_absx(ctx);
 			break;
+		default:
+			printf("ILLEGAL ARGUMENT %02X\n", op);
+			exit(0);
+			break;
+
 	}
-	std::cout << "A: " << std::hex << (int)ctx->a << std::endl;	
-	std::cout << "P: " <<  std::bitset<8>(ctx->p) << std::endl;
-	exit(0);
+	//ctx->print_state();
+	uint16_t ptr = 0x6004;
+	uint8_t c = 0;
+	do {
+		c = ctx->cpu_mem.get(ptr++);
+		if (c == 0) break;
+		printf("%c", c);
+	}
+	while (c != 0 && c != 0xFF);
+	std::cout << std::endl;
 }
