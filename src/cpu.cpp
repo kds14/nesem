@@ -886,9 +886,9 @@ void SBC_indx(State* ctx) {
 }
 
 void BIT(State* ctx, uint8_t operand) {
-	ctx->z = ctx->a & operand;
+	ctx->z = (ctx->a & operand) == 0;
 	ctx->n = operand >> 7;
-	ctx->v = operand >> 6;
+	ctx->v = (operand >> 6) & 0x1;
 }
 
 void BIT_zp(State* ctx) {
@@ -898,6 +898,7 @@ void BIT_zp(State* ctx) {
 }
 
 void BIT_abs(State* ctx) {
+	printf("[ BIT_abs at %04X with operand %02X ]", get_16(ctx), get_abs(ctx));
 	BIT(ctx, get_abs(ctx));
 	ctx->pc += 3;
 	ctx->cycles += 4;
@@ -1042,9 +1043,10 @@ void INY(State* ctx) {
 	ctx->cycles += 2;
 }
 
-	#include <bitset>
+static bool ran = false;
 void CPU::fde(State* ctx) {
 	uint8_t op = get_op(ctx);
+	ctx->print_state();
 	switch (op) {
 		case 0x00:
 			brk(ctx);
@@ -1512,14 +1514,19 @@ void CPU::fde(State* ctx) {
 			break;
 
 	}
-	//ctx->print_state();
-	uint16_t ptr = 0x6004;
-	uint8_t c = 0;
-	do {
-		c = ctx->cpu_mem.get(ptr++);
-		if (c == 0) break;
-		printf("%c", c);
+	uint8_t val = ctx->cpu_mem.get(0x6000);
+	if (val == 0x80 && !ran) {
+		ran = true;
+	} else if (val < 0x80 && ran) {
+		uint16_t ptr = 0x6004;
+		uint8_t c = 0;
+		do {
+			c = ctx->cpu_mem.get(ptr++);
+			if (c == 0) break;
+			printf("%c", c);
+		}
+		while (c != 0);
+		std::cout << std::endl;
+		exit(0);
 	}
-	while (c != 0 && c != 0xFF);
-	std::cout << std::endl;
 }

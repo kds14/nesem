@@ -12,7 +12,6 @@ static void file2mem(std::string filename, CPU_Memory* cpu_mem, PPU_Memory* ppu_
 	std::ifstream f(filename, std::ios::binary);
 	f.seekg(0, std::ios::end);
 	std::streamsize sz = f.tellg();
-	std::cout << (int)sz << std:: endl;
 	f.seekg(0, std::ios::beg);
 	uint8_t* buff = new uint8_t[sz]();
 	if (!f.read((char*)buff, sz)) {
@@ -27,9 +26,7 @@ int main(int argc, char** argv) {
 	std::unique_ptr<State> ctx = std::make_unique<State>();
 	std::unique_ptr<Display> disp = std::make_unique<Display>();
 	std::unique_ptr<CPU> cpu = std::make_unique<CPU>();
-	std::cout << argv[1] << std::endl;
 	file2mem(argv[1], &ctx->cpu_mem, nullptr);
-	std::cout << 2 << std::endl;
 
 	ctx->pc = ctx->cpu_mem.get16(0xFFFC);
 	ctx->p = 0x34;
