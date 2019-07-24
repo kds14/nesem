@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-static void file2mem(std::string filename, CPU_Memory* cpu_mem, PPU_Memory* ppu_mem) {
+static void file2mem(State* ctx, std::string filename, CPU_Memory* cpu_mem, PPU_Memory* ppu_mem) {
 	std::ifstream f(filename, std::ios::binary);
 	f.seekg(0, std::ios::end);
 	std::streamsize sz = f.tellg();
@@ -19,16 +19,18 @@ static void file2mem(std::string filename, CPU_Memory* cpu_mem, PPU_Memory* ppu_
 		exit(0);
 	}
 	f.close();
-	*cpu_mem = CPU_Memory(buff, buff[4]);
+	printf("%02X\n", buff[4]);
+	*cpu_mem = CPU_Memory(buff, buff[4], ctx->OAM);
 }
 
 int main(int argc, char** argv) {
 	std::unique_ptr<State> ctx = std::make_unique<State>();
 	std::unique_ptr<Display> disp = std::make_unique<Display>();
 	std::unique_ptr<CPU> cpu = std::make_unique<CPU>();
-	file2mem(argv[1], &ctx->cpu_mem, nullptr);
+	file2mem(ctx.get(), argv[1], &ctx->cpu_mem, nullptr);
 
 	ctx->pc = ctx->cpu_mem.get16(0xFFFC);
+	//ctx->print_state();
 	ctx->p = 0x34;
 	ctx->s = 0xFD;
 	

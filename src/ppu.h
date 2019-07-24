@@ -5,7 +5,7 @@
 
 class PPU {
 public:
-	void handle(uint64_t cycles);
+	void tick(uint64_t cycles);
 };
 
 #endif

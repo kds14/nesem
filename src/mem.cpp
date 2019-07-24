@@ -1,45 +1,75 @@
 #include "mem.h"
 
-CPU_Memory::CPU_Memory(uint8_t* buff, int prg_cnt) : internal_RAM(false, 0x800), PPU_regs(false, 0x8), APU_IO_regs(false, 0x18), APU_IO_func(false, 0x8), cartridge(false, prg_cnt * 0x4000, buff + 0x10), work_ram(true, 0x2000), prg_cnt(prg_cnt) {
-	
+CPU_Memory::CPU_Memory(uint8_t* buff, int prg_cnt, uint8_t* OAM) : internal_RAM(false, 0x800, 0),
+	PPU_regs(false, 0x8, 0x2000), APU_IO_regs(false, 0x18, 0x4000),
+	APU_IO_func(false, 0x8, 0x4018), work_ram(true, 0x2000, 0x6000), prg_cnt(prg_cnt),
+ 	cartridge(false, prg_cnt * 0x4000, buff + 0x10, 0x8000), OAM(OAM) {}
+
+PPU_Memory::PPU_Memory() : ptable0(false, 0x1000, 0), ptable1(false, 0x1000, 0x1000),
+	ntable0(false, 0x400, 0x2000), ntable1(false, 0x400, 0x2400),
+	ntable2(false, 0x400, 0x2800), ntable3(false, 0x400, 0x2C00),
+	palette_ram_idx(true, 0x0020, 0x3F00) { }
+
+MemRegion* CPU_Memory::get_mem_region(uint16_t addr) {
+	if (addr < 0x2000) {
+		return &internal_RAM;
+	} else if (addr < 0x4000) {
+		return &PPU_regs;
+	} else if (addr < 0x4018) {
+		return &APU_IO_regs;
+	} else if (addr < 0x4020) {
+		return &APU_IO_func;
+	} else if (addr < 0x8000) {
+		return &work_ram;
+	} else {
+		return &cartridge;
+	}
 }
 
-CPU_Memory::CPU_Memory() : internal_RAM(false, 0x800), PPU_regs(false, 0x8), APU_IO_regs(false, 0x18), APU_IO_func(false, 0x8), work_ram(true, 0x2000), cartridge(false, 0x0) {
-	
-}
-
-PPU_Memory::PPU_Memory() : ptable0(false, 0x1000), ptable1(false, 0x1000), ntable0(false, 0x400), ntable1(false, 0x400), ntable2(false, 0x400), ntable3(false, 0x400), palette_ram_idx(true, 0x0020) {
+void CPU_Memory::DMA(uint8_t high_byte) {
+	uint16_t addr = (uint16_t)high_byte << 8;
+	MemRegion* mr;
+	uint8_t extra = 0;
+	do {
+		mr = get_mem_region(addr);
+		uint16_t sz = std::min(mr->get_end() - addr, 0x100);
+		uint8_t* begin = mr->get_ptr(addr);
+		std::copy(begin, begin + 0x100, OAM + extra);
+		addr += sz;
+		extra += sz;
+		
+	} while (extra < 0x100 && mr->get_end() < addr | 0xFF);
 }
 
 uint8_t CPU_Memory:: get(uint16_t addr) {
-	if (addr < 0x2000) {
-		return internal_RAM.dget(addr % 0x800);
-	} else if (addr < 0x4000) {
-		return PPU_regs.dget((addr - 0x2000) % 0x8);
-	} else if (addr < 0x4018) {
-		return APU_IO_regs.dget((addr - 0x4000));
-	} else if (addr < 0x4020) {
-		return APU_IO_func.dget((addr - 0x4018));
-	} else if (addr < 0x8000) {
-		return cartridge.dget((addr - 0x6000) % (0x2000));
-	} else {
-		return cartridge.dget((addr - 0x8000) % (0x4000 * prg_cnt));
-	}
-
+	MemRegion* mr = get_mem_region(addr);
+	//printf("\n%04X - %04X mod %04x = %04X\n", addr, mr->get_start(), mr->size(), (addr - mr->get_start()) % mr->size());
+	return mr->dget((addr - mr->get_start()) % mr->size());
 }
+
 void CPU_Memory::set(uint8_t val, uint16_t addr) {
-	if (addr < 0x2000) {
-		internal_RAM.dset(addr % 0x800, val);
-	} else if (addr < 0x4000) {
-		PPU_regs.dset((addr - 0x2000) % 0x8, val);
-	} else if (addr < 0x4018) {
-		APU_IO_regs.dset((addr - 0x4000), val);
-	} else if (addr < 0x4020) {
-		APU_IO_func.dset((addr - 0x4018), val);
-	} else if (addr < 0x8000) {
-		return cartridge.dset((addr - 0x6000) % 0x2000, val);
+	MemRegion* mr = get_mem_region(addr);
+	if (addr == 0x2000) {
+		// TODO PPUCTRL
+	} else if (addr == 0x2001) {
+		// TODO PPUMASK
+	} else if (addr == 0x2002) {
+		// TODO PPUSTATUS
+	} else if (addr == 0x2003) {
+		// TODO OAMADDR
+	} else if (addr == 0x2004) {
+		// TODO OAMDATA
+	} else if (addr == 0x2005) {
+		// TODO PPUSCROLL
+	} else if (addr == 0x2006) {
+		// TODO PPUADDR
+	} else if (addr == 0x2007) {
+		// TODO PPUDATA
+	} else if (addr == 0x4014) {
+		// TODO OAMDMA
+		DMA(val);
 	} else {
-		cartridge.dset((addr - 0x8000) % (0x4000 * prg_cnt), val);
+		mr->dset((addr - mr->get_start()) % mr->size(), val);
 	}
 
 }

@@ -898,7 +898,7 @@ void BIT_zp(State* ctx) {
 }
 
 void BIT_abs(State* ctx) {
-	printf("[ BIT_abs at %04X with operand %02X ]", get_16(ctx), get_abs(ctx));
+	//printf("[ BIT_abs at %04X with operand %02X ]", get_16(ctx), get_abs(ctx));
 	BIT(ctx, get_abs(ctx));
 	ctx->pc += 3;
 	ctx->cycles += 4;
@@ -1046,7 +1046,6 @@ void INY(State* ctx) {
 static bool ran = false;
 void CPU::fde(State* ctx) {
 	uint8_t op = get_op(ctx);
-	ctx->print_state();
 	switch (op) {
 		case 0x00:
 			brk(ctx);

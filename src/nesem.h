@@ -31,13 +31,12 @@ struct State {
 	uint64_t cycles = 0;
 	CPU_Memory cpu_mem;
 	PPU_Memory ppu_mem;
+	uint8_t OAM[0x100];
 	uint32_t prev_pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 	uint32_t pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 	void print_state() {
 		State* ctx = this;
-		printf("%04X ", ctx->pc);
-		printf("%02X (", ctx->cpu_mem.get(ctx->pc));
-		printf("a: %02X , x: %02X, y: %02X, s: %02X, next: %02X %02X, ", ctx->a, ctx->x, ctx->y, ctx->s, ctx->cpu_mem.get(ctx->pc + 1), ctx->cpu_mem.get(ctx->pc + 2));
+		printf("%04X %02X a: %02X , x: %02X, y: %02X, s: %02X, next: %02X %02X, ", ctx->pc, ctx->cpu_mem.get(ctx->pc), ctx->a, ctx->x, ctx->y, ctx->s, ctx->cpu_mem.get(ctx->pc + 1), ctx->cpu_mem.get(ctx->pc + 2));
 		std::cout << std::bitset<8>(ctx->p) << ")" << std::endl;
 	}
 
