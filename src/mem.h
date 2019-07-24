@@ -73,6 +73,7 @@ public:
 	void set(uint8_t val, uint16_t addr);
 	CPU_Memory(uint8_t* buff, int prg_cnt, uint8_t* OAM);
 	CPU_Memory() {};
+	uint8_t* get_PPU_regs();
 };
 
 class PPU_Memory : public Memory {

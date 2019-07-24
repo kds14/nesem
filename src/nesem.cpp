@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-static void file2mem(State* ctx, std::string filename, CPU_Memory* cpu_mem, PPU_Memory* ppu_mem) {
+static void file2mem(State* ctx, std::string filename) {
 	std::ifstream f(filename, std::ios::binary);
 	f.seekg(0, std::ios::end);
 	std::streamsize sz = f.tellg();
@@ -20,14 +20,16 @@ static void file2mem(State* ctx, std::string filename, CPU_Memory* cpu_mem, PPU_
 	}
 	f.close();
 	printf("%02X\n", buff[4]);
-	*cpu_mem = CPU_Memory(buff, buff[4], ctx->OAM);
+	ctx->cpu_mem = CPU_Memory(buff, buff[4], ctx->OAM);
+	ctx->ppu_mem = PPU_Memory();
 }
 
 int main(int argc, char** argv) {
 	std::unique_ptr<State> ctx = std::make_unique<State>();
 	std::unique_ptr<Display> disp = std::make_unique<Display>();
+	file2mem(ctx.get(), argv[1]);
 	std::unique_ptr<CPU> cpu = std::make_unique<CPU>();
-	file2mem(ctx.get(), argv[1], &ctx->cpu_mem, nullptr);
+	std::unique_ptr<PPU> ppu = std::make_unique<PPU>(ctx->cpu_mem.get_PPU_regs());
 
 	ctx->pc = ctx->cpu_mem.get16(0xFFFC);
 	//ctx->print_state();
@@ -35,7 +37,14 @@ int main(int argc, char** argv) {
 	ctx->s = 0xFD;
 	
 	disp->init(ctx.get(), 1);
-	while (disp->wait()) { cpu->fde(ctx.get());}
+	uint64_t prev_cycles;
+	while (disp->wait()) {
+		prev_cycles = ctx->cycles;
+		cpu->fde(ctx.get());
+		for (int i = 0; i <  ctx->cycles - prev_cycles; ++i) {
+			ppu->tick(ctx.get());
+		}
+	}
 	disp->kill();
 	return 0;
 }

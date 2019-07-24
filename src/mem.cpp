@@ -74,6 +74,10 @@ void CPU_Memory::set(uint8_t val, uint16_t addr) {
 
 }
 
+uint8_t* CPU_Memory::get_PPU_regs() {
+	return PPU_regs.get_ptr(0);
+}
+
 uint8_t PPU_Memory::get(uint16_t addr) {
 	return 0;
 }
