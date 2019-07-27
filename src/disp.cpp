@@ -20,17 +20,17 @@ void Display::clear() {
 void Display::lock_texture(State* ctx) {
 	int pitch;
 	clear();
+	if (ctx->pixels)
+		std::copy(ctx->pixels, ctx->pixels + (SCREEN_WIDTH * SCREEN_HEIGHT),
+				ctx->prev_pixels);
 	SDL_LockTexture(texture, NULL, (void**)&ctx->pixels, &pitch);
 	clear_texture(ctx);
 }
 
-void Display::draw_pixel(State* ctx, int x, int y, uint8_t color, int bg, uint8_t rc, int prty, uint16_t sprty) {
+void Display::draw_pixel(State* ctx, int x, int y, uint8_t color) {
 	if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT)
 		return;
-
-	int idx = SCREEN_HEIGHT * y + x;
-
-	ctx->pixels[idx] = colors[color];
+	ctx->pixels[SCREEN_HEIGHT * y + x] = colors[color];
 }
 
 void Display::ready() {
@@ -49,8 +49,8 @@ bool Display::init(State* ctx, int scale_factor) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 		return false;
 	} else {
-		this->renderer = nullptr;
-		this->window = nullptr;
+		renderer = nullptr;
+		window = nullptr;
 		SDL_CreateWindowAndRenderer(SCREEN_WIDTH * scale_factor, SCREEN_HEIGHT * scale_factor, 0, &window, &renderer);
 		if (window == NULL || renderer == NULL) {
 			printf( "Window or renderer could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -87,9 +87,16 @@ void Display::kill() {
 
 bool Display::wait() {
 	SDL_Event event;
+	double base = 16.67L - SDL_GetTicks() + frame_time + rem;
+	int wait = base;
+	rem = base - wait;	
+
 	if (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT)
-			return false;
+			return true;
 	}
-	return true;
+	if (wait > 0)
+		SDL_Delay(wait);
+	frame_time = SDL_GetTicks();
+	return false;
 }

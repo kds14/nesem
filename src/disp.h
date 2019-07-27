@@ -5,14 +5,6 @@
 #include "nesem.h"
 
 class Display {
-public:
-	bool init(State* ctx, int scale_factor);
-	void kill();
-	bool wait();
-	void display(State* ctx);
-	void ready();
-	void draw_pixel(State* ctx, int x, int y, uint8_t color,
-				int bg, uint8_t rc, int prty, uint16_t sprty);
 private:
 	SDL_Window *window;
 	SDL_Renderer *renderer;
@@ -21,6 +13,15 @@ private:
 	void lock_texture(State* ctx);
 	void clear();
 	uint32_t colors[4];
+	double rem = 0;
+	uint32_t frame_time = 0;
+public:
+	bool init(State* ctx, int scale_factor);
+	void kill();
+	bool wait();
+	void display(State* ctx);
+	void ready();
+	void draw_pixel(State* ctx, int x, int y, uint8_t color);
 };
 
 #endif

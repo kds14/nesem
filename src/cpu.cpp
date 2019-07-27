@@ -107,13 +107,13 @@ uint8_t pop_stack(State* ctx) {
 
 void JMP_abs(State* ctx) {
 	ctx->pc = get_16(ctx);
-	ctx->cycles = 3;
+	ctx->cycles += 3;
 }
 
 void JMP_ind(State* ctx) {
 	// TODO: bug when using last byte of page
 	ctx->pc = ctx->cpu_mem.get16(get_16(ctx));
-	ctx->cycles = 5;
+	ctx->cycles += 5;
 }
 
 void brk(State* ctx) {
@@ -1512,7 +1512,7 @@ void CPU::fde(State* ctx) {
 			exit(0);
 			break;
 
-	}
+	}/*
 	uint8_t val = ctx->cpu_mem.get(0x6000);
 	if (val == 0x80 && !ran) {
 		ran = true;
@@ -1526,6 +1526,8 @@ void CPU::fde(State* ctx) {
 		}
 		while (c != 0);
 		std::cout << std::endl;
+		ctx->print_state();
 		exit(0);
 	}
+	*/
 }

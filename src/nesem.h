@@ -7,8 +7,8 @@
 #include "mem.h"
 #include <bitset>
 
-const int SCREEN_WIDTH = 160;
-const int SCREEN_HEIGHT = 144;
+const int SCREEN_WIDTH = 256;
+const int SCREEN_HEIGHT = 240;
 
 struct State {
 	uint8_t a = 0;
@@ -33,11 +33,17 @@ struct State {
 	PPU_Memory ppu_mem;
 	uint8_t OAM[0x100];
 	uint32_t prev_pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
-	uint32_t pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
+	uint32_t* pixels = nullptr;
 	void print_state() {
 		State* ctx = this;
 		printf("%04X %02X a: %02X , x: %02X, y: %02X, s: %02X, next: %02X %02X, ", ctx->pc, ctx->cpu_mem.get(ctx->pc), ctx->a, ctx->x, ctx->y, ctx->s, ctx->cpu_mem.get(ctx->pc + 1), ctx->cpu_mem.get(ctx->pc + 2));
 		std::cout << std::bitset<8>(ctx->p) << ")" << std::endl;
+		std::cout << "OAM:" << std::endl;
+		for (int i = 0; i < 0x100; ++i) {
+			printf("%02X ", OAM[i]);
+			if (!(i % 0xF) && i)
+				std::cout << std::endl;
+		}
 	}
 
 };

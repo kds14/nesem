@@ -68,6 +68,7 @@ private:
 	void DMA(uint8_t high_byte);
 	MemRegion* get_mem_region(uint16_t addr);
 	uint8_t* OAM;
+	void DMA_inc(uint8_t val);
 public:
 	uint8_t get(uint16_t addr);
 	void set(uint8_t val, uint16_t addr);
