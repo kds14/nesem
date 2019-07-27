@@ -832,6 +832,19 @@ void ADC(State* ctx, uint8_t operand) {
 	ctx->z = ctx->a == 0;
 }
 
+void ARR(State* ctx) {
+	AND(ctx, get_b1(ctx));
+	ctx->v = (ctx->a >> 7) ^ (ctx->a >> 6);
+	uint8_t bit7 = ctx->a >> 7;
+	uint8_t res = ctx->c << 7 | ctx->a >> 1;
+	ctx->c = bit7;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	ctx->a = res;
+	ctx->pc += 2;
+	ctx->cycles += 2;
+}
+
 void ADC_imm(State* ctx) {
 	ADC(ctx, get_b1(ctx));
 	ctx->pc += 2;
@@ -972,6 +985,8 @@ void TXS(State* ctx) {
 
 void TSX(State* ctx) {
 	ctx->x = ctx->s;
+	ctx->n = ctx->x >> 7;
+	ctx->z = ctx->x == 0;
 	ctx->pc += 1;
 	ctx->cycles += 2;
 }
@@ -984,6 +999,8 @@ void PHA(State* ctx) {
 
 void PLA(State* ctx) {
 	ctx->a = pop_stack(ctx);
+	ctx->z = ctx->a == 0;
+	ctx->n = ctx->a >> 7;
 	ctx->pc += 1;
 	ctx->cycles += 4;
 }
@@ -1092,16 +1109,30 @@ void SAX(State* ctx) {
 	uint16_t tmp_a = ctx->a;
 	ctx->a = ctx->x;
 	AND(ctx, tmp_a);
-	ctx->p |= 0x1;
+	ctx->c = 1;
+	uint8_t v = ctx->v;
 	ADC(ctx, ~get_b1(ctx));
+	ctx->x = ctx->a;
 	ctx->a = tmp_a;
 	ctx->n = ctx->a >> 7;
 	ctx->z = ctx->a == 0;
+	ctx->v = v;
 	ctx->cycles += 2;
 	ctx->pc += 2;
 }
 
+void LAX_imm(State* ctx) {
+	ctx->a = get_b1(ctx);
+	LDX_imm(ctx);
+	ctx->cycles += 1;
+}
+
+void AXS(State* ctx) {
+}
+
 static bool ran = false;
+static int start = 0;
+
 void CPU::fde(State* ctx) {
 	if (ctx->cpu_mem.nmi && ctx->cpu_mem.nmi_output) {
 		ctx->pc = ctx->cpu_mem.get16(0xFFFA);
@@ -1571,7 +1602,7 @@ void CPU::fde(State* ctx) {
 		case 0xFE:
 			INC_absx(ctx);
 			break;
-		// unofficial
+			// unofficial
 		case 0xCB:
 			SAX(ctx);
 			break;
@@ -1579,12 +1610,13 @@ void CPU::fde(State* ctx) {
 			// OAL
 			ORA(ctx, 0xEE);
 			AND_imm(ctx);
+			ctx->x = ctx->a;
+			ctx->n = ctx->a >> 7;
+			ctx->z = ctx->a == 0;
 			break;
 		case 0x6B:
 			// ARR
-			AND(ctx, get_b1(ctx));
-			ROR_acc(ctx);
-			ctx->pc++;
+			ARR(ctx);
 			break;
 		case 0x4B:
 			ALR(ctx);

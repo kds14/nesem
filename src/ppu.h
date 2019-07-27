@@ -33,7 +33,8 @@ private:
 	void draw_3dots(State* ctx);
 	void draw_bg(State* ctx, uint8_t x, uint8_t y);
 	void draw_obj(State* ctx, uint8_t x, uint8_t y);
-	uint8_t get_col_bit(uint8_t idx, uint8_t y, bool bit0);
+	//void draw_scanline(State* ctx, uint8_t y);
+	uint8_t get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, bool bit, bool bg);
 public:
 	bool tick(State* ctx);
 	PPU(uint8_t* register_start, Display* disp);

@@ -18,8 +18,9 @@ static void file2mem(State* ctx, std::string filename) {
 		std::cout << "Failed to read file" << std::endl;
 		exit(0);
 	}
+	printf("%02X\n", buff[4]);
 	f.close();
-	ctx->cpu_mem = CPU_Memory(buff, buff[4], ctx->OAM);
+	ctx->cpu_mem = CPU_Memory(&ctx->cycles, buff, buff[4], ctx->OAM);
 	ctx->ppu_mem = PPU_Memory();
 }
 

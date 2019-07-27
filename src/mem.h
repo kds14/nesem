@@ -7,6 +7,8 @@
 const size_t CPU_MEM_SIZE = 0x10000;
 const size_t PPU_MEM_SIZE = 0x4000;
 
+struct State;
+
 class MemRegion {
 private:
 	bool readonly;
@@ -37,9 +39,6 @@ public:
 	}
 };
 
-class CPU_Memory;
-class PPU_Memory;
-
 class Memory {
 private:
 	virtual MemRegion* get_mem_region(uint16_t addr) = 0;
@@ -69,10 +68,11 @@ private:
 	MemRegion* get_mem_region(uint16_t addr);
 	uint8_t* OAM;
 	void DMA_inc(uint8_t val);
+	uint64_t* cycles;
 public:
 	uint8_t get(uint16_t addr);
 	void set(uint8_t val, uint16_t addr);
-	CPU_Memory(uint8_t* buff, int prg_cnt, uint8_t* OAM);
+	CPU_Memory(uint64_t* cycles, uint8_t* buff, int prg_cnt, uint8_t* OAM);
 	CPU_Memory() {};
 	uint8_t* get_PPU_regs();
 	bool nmi = false;
@@ -88,7 +88,7 @@ private:
 	MemRegion ntable2;
 	MemRegion ntable3;
 	MemRegion palette_ram_idx;
-	MemRegion* get_mem_region(uint16_t addr) { return nullptr; };
+	MemRegion* get_mem_region(uint16_t addr);
 public:
 	uint8_t get(uint16_t addr);
 	void set(uint8_t val, uint16_t addr);

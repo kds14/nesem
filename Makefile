@@ -1,7 +1,7 @@
 TARGET=./build/nesem
 DIR=./build/
 CC=g++
-CFLAGS=-std=c++17 -g
+CFLAGS=-std=c++17 -pg
 SRC=./src/*.cpp
 
 all: $(TARGET)
