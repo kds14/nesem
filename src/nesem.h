@@ -45,7 +45,14 @@ struct State {
 				std::cout << std::endl;
 		}
 	}
-
 };
+
+static void print_stack(State* ctx) {
+	printf("STACK: ");
+	for (uint16_t i = ctx->s; i < 0x100; ++i) {
+		printf("%02X ", ctx->cpu_mem.get(0x100 + i));
+	}
+	puts("");
+}
 
 #endif

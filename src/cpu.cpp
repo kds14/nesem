@@ -1135,11 +1135,15 @@ static int start = 0;
 
 void CPU::fde(State* ctx) {
 	if (ctx->cpu_mem.nmi && ctx->cpu_mem.nmi_output) {
+		push_stack(ctx, ctx->pc >> 8);
+		push_stack(ctx, ctx->pc & 0xFF);
+		push_stack(ctx, ctx->p);
 		ctx->pc = ctx->cpu_mem.get16(0xFFFA);
 		ctx->cpu_mem.nmi = false;
 	}
 	uint8_t op = get_op(ctx);
-	printf("%04X %02X %02X %02X a: %02X, y: %02X [0x200]: %02X\n", ctx->pc, op, get_b1(ctx), get_b2(ctx), ctx->a, ctx->y, ctx->cpu_mem.get(0x200));
+	printf("%04X %02X %02X %02X a: %02X, y: %02X, s: %02X\t", ctx->pc, op, get_b1(ctx), get_b2(ctx), ctx->a, ctx->y, ctx->s);
+	print_stack(ctx);
 	switch (op) {
 		case 0x00:
 			brk(ctx);
