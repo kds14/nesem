@@ -44,16 +44,18 @@ void PPU::draw_3dots(State* ctx) {
 	for (int i = 0; i < 3; ++i) {
 		y = (uint16_t)scanline;
 		x = dot++;
-		if (scanline == -1) {
+		if (scanline == -1 && dot == 1) {
 			ctx->cpu_mem.nmi = false;
-		} else if (scanline == 240) {
+			*PPUSTATUS &= 0x7F;
+		} else if (scanline == 241 && dot == 1) {
 			ctx->cpu_mem.nmi = true;
+			*PPUSTATUS |= 0x80;
 		} else if (scanline > 240) {
-		} else if (dot <= scanline_dots) {
+		} else if (scanline > -1 && dot <= scanline_dots) {
 			draw_bg(ctx, x, y);
 			//draw_obj(ctx, x, y);
 		}
-		if (dot >= scanline_dots + hblank_dots) {
+		if (dot >= scanline_dots) {
 			dot = 0;
 			scanline = (int)(scanline + 1) >= 262 ? -1 : scanline + 1;
 		}

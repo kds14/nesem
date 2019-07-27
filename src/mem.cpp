@@ -47,7 +47,7 @@ uint8_t CPU_Memory:: get(uint16_t addr) {
 	MemRegion* mr = get_mem_region(addr);
 	uint8_t val =  mr->dget((addr - mr->get_start()) % mr->size());
 	if (addr = 0x2002) {
-		mr->dset(addr, (val & 0x80) | (nmi << 7));
+		mr->dset((addr - mr->get_start()) % mr->size(), (val & 0x7F));
 		nmi = false;
 	}
 	return val;

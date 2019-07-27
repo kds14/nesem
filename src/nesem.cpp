@@ -19,7 +19,6 @@ static void file2mem(State* ctx, std::string filename) {
 		exit(0);
 	}
 	f.close();
-	printf("%02X\n", buff[4]);
 	ctx->cpu_mem = CPU_Memory(buff, buff[4], ctx->OAM);
 	ctx->ppu_mem = PPU_Memory();
 }
@@ -35,7 +34,6 @@ int main(int argc, char** argv) {
 	ctx->pc = ctx->cpu_mem.get16(0xFFFC);
 	ctx->p = 0x34;
 	ctx->s = 0xFD;
-	ctx->print_state();
 	uint64_t prev_cycles = 0;
 	while (1) {
 		prev_cycles = ctx->cycles;

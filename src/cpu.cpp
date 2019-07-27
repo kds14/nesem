@@ -1,5 +1,13 @@
 #include "cpu.h"
 
+bool page_check(State* ctx, uint16_t dest) {
+	if (ctx->pc % 0x100 != dest % 0x100) {
+		ctx->cycles += 1;
+		return true;
+	}
+	return false;
+}
+
 /*
  * Addressing mode helper functions
  */
@@ -28,8 +36,15 @@ uint8_t get_indx(State* ctx) {
 	return ctx->cpu_mem.get(get_ind(ctx, get_b1(ctx) + ctx->x));
 }
 
+uint8_t get_indy(State* ctx, bool p) {
+	uint16_t addr = get_ind(ctx, get_b1(ctx)) + ctx->y;
+	if (p && !page_check(ctx, get_b1(ctx)))
+		 page_check(ctx, addr);
+	return ctx->cpu_mem.get(addr);
+}
+
 uint8_t get_indy(State* ctx) {
-	return ctx->cpu_mem.get(get_ind(ctx, get_b1(ctx)) + ctx->y);
+	get_indy(ctx, true);
 }
 
 uint16_t get_indx_ptr(State* ctx) {
@@ -76,13 +91,29 @@ uint8_t get_absx(State* ctx) {
 	return ctx->cpu_mem.get(get_16(ctx) + ctx->x);
 }
 
+uint8_t get_absx(State* ctx, bool p) {
+	uint16_t addr = get_16(ctx) + ctx->x;
+	if (p)
+		page_check(ctx, addr);
+	return ctx->cpu_mem.get(addr);
+}
+
+
 uint16_t get_absx_ptr(State* ctx) {
 	return (get_16(ctx) + ctx->x);
 }
 
-uint8_t get_absy(State* ctx) {
-	return ctx->cpu_mem.get(get_16(ctx) + ctx->y);
+uint8_t get_absy(State* ctx, bool p) {
+	uint16_t addr = get_16(ctx) + ctx->y;
+	if (p)
+		page_check(ctx, addr);
+	return ctx->cpu_mem.get(addr);
 }
+
+uint8_t get_absy(State* ctx) {
+	return get_absy(ctx, true);
+}
+
 
 uint16_t get_absy_ptr(State* ctx) {
 	return (get_16(ctx) + ctx->y);
@@ -152,7 +183,7 @@ void LDY_abs(State* ctx) {
 }
 
 void LDY_absx(State* ctx) {
-	LD_reg(ctx, &ctx->y, get_absx(ctx));
+	LD_reg(ctx, &ctx->y, get_absx(ctx, true));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
@@ -212,7 +243,7 @@ void LDA_abs(State* ctx) {
 }
 
 void LDA_absx(State* ctx) {
-	LD_reg(ctx, &ctx->a, get_absx(ctx));
+	LD_reg(ctx, &ctx->a, get_absx(ctx, true));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
@@ -266,7 +297,7 @@ void ORA_abs(State* ctx) {
 }
 
 void ORA_absx(State* ctx) {
-	ORA(ctx, get_absx(ctx));
+	ORA(ctx, get_absx(ctx, true));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
@@ -278,7 +309,7 @@ void ORA_absy(State* ctx) {
 }
 
 void ORA_indy(State* ctx) {
-	ORA(ctx, get_indy(ctx));
+	ORA(ctx, get_indy(ctx, true));
 	ctx->pc += 2;
 	ctx->cycles += 5;
 }
@@ -320,7 +351,7 @@ void EOR_abs(State* ctx) {
 }
 
 void EOR_absx(State* ctx) {
-	EOR(ctx, get_absx(ctx));
+	EOR(ctx, get_absx(ctx, true));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
@@ -702,8 +733,8 @@ void AND_abs(State* ctx) {
 }
 
 void AND_absx(State* ctx) {
-	AND(ctx, get_absx(ctx));
 	ctx->pc += 3;
+	AND(ctx, get_absx(ctx, true));
 	ctx->cycles += 4;
 }
 
@@ -725,10 +756,22 @@ void AND_indx(State* ctx) {
 	ctx->cycles += 6;
 }
 
+void ALR(State* ctx) {
+	AND(ctx, get_b1(ctx));
+	uint8_t val = ctx->a;
+	uint8_t bit0 = val & 0x1;
+	uint8_t res = val >> 1;
+	ctx->c = bit0;
+	ctx->n = res >> 7;
+	ctx->z = res == 0;
+	ctx->a = res;
+	ctx->cycles += 2;
+	ctx->pc += 2;
+}
+
 void CMP(State* ctx, uint8_t operand, uint8_t reg) {
-	uint16_t val = ctx->c + operand + ctx->a;
 	ctx->c = reg >= operand;
-	ctx->n = operand > reg;
+	ctx->n = (reg - operand) >> 7;
 	ctx->z = reg == operand;
 }
 
@@ -757,8 +800,8 @@ void CMP_abs(State* ctx, uint8_t reg) {
 }
 
 void CMP_absx(State* ctx) {
-	CMP(ctx, get_absx(ctx), ctx->a);
 	ctx->pc += 3;
+	CMP(ctx, get_absx(ctx, true), ctx->a);
 	ctx->cycles += 4;
 }
 
@@ -782,8 +825,8 @@ void CMP_indx(State* ctx) {
 
 void ADC(State* ctx, uint8_t operand) {
 	uint16_t val = ctx->c + operand + ctx->a;
-	ctx->v = (ctx->a ^ val) & (operand ^ val) & 0x80;
-	ctx->c = val >> 8;
+	ctx->v = ((ctx->a ^ val) & 0x80) && ((operand ^ val) & 0x80);
+	ctx->c = val > 255;
 	ctx->a = val;
 	ctx->n = ctx->a >> 7;
 	ctx->z = ctx->a == 0;
@@ -814,7 +857,7 @@ void ADC_abs(State* ctx) {
 }
 
 void ADC_absx(State* ctx) {
-	ADC(ctx, get_absx(ctx));
+	ADC(ctx, get_absx(ctx, true));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
@@ -862,7 +905,7 @@ void SBC_abs(State* ctx) {
 }
 
 void SBC_absx(State* ctx) {
-	ADC(ctx, ~get_absx(ctx));
+	ADC(ctx, ~get_absx(ctx, true));
 	ctx->pc += 3;
 	ctx->cycles += 4;
 }
@@ -906,8 +949,10 @@ void BIT_abs(State* ctx) {
 
 void branch(State* ctx, uint8_t condition) {
 	if (condition) {
+		uint16_t old = ctx->pc;
 		ctx->pc += (int8_t)get_b1(ctx);
 		ctx->cycles += 1;
+		page_check(ctx, old + 2);
 	}
 	ctx->pc += 2;
 	ctx->cycles += 2;
@@ -1043,14 +1088,27 @@ void INY(State* ctx) {
 	ctx->cycles += 2;
 }
 
+void SAX(State* ctx) {
+	uint16_t tmp_a = ctx->a;
+	ctx->a = ctx->x;
+	AND(ctx, tmp_a);
+	ctx->p |= 0x1;
+	ADC(ctx, ~get_b1(ctx));
+	ctx->a = tmp_a;
+	ctx->n = ctx->a >> 7;
+	ctx->z = ctx->a == 0;
+	ctx->cycles += 2;
+	ctx->pc += 2;
+}
+
 static bool ran = false;
 void CPU::fde(State* ctx) {
 	if (ctx->cpu_mem.nmi && ctx->cpu_mem.nmi_output) {
-		puts("YOLO");
 		ctx->pc = ctx->cpu_mem.get16(0xFFFA);
 		ctx->cpu_mem.nmi = false;
 	}
 	uint8_t op = get_op(ctx);
+	printf("%04X %02X %02X %02X a: %02X, y: %02X [0x200]: %02X\n", ctx->pc, op, get_b1(ctx), get_b2(ctx), ctx->a, ctx->y, ctx->cpu_mem.get(0x200));
 	switch (op) {
 		case 0x00:
 			brk(ctx);
@@ -1472,6 +1530,7 @@ void CPU::fde(State* ctx) {
 		case 0xE8:
 			INX(ctx);
 			break;
+		case 0xEB:
 		case 0xE9:
 			SBC_imm(ctx);
 			break;
@@ -1512,12 +1571,51 @@ void CPU::fde(State* ctx) {
 		case 0xFE:
 			INC_absx(ctx);
 			break;
+		// unofficial
+		case 0xCB:
+			SAX(ctx);
+			break;
+		case 0xAB:
+			// OAL
+			ORA(ctx, 0xEE);
+			AND_imm(ctx);
+			break;
+		case 0x6B:
+			// ARR
+			AND(ctx, get_b1(ctx));
+			ROR_acc(ctx);
+			ctx->pc++;
+			break;
+		case 0x4B:
+			ALR(ctx);
+			break;
+		case 0x0B:
+		case 0x2B:
+			AND_imm(ctx);
+			ctx->c = ctx->n;
+			ctx->cycles += 2;
+			break;
+		case 0x80:
+		case 0x82:
+		case 0x89:
+		case 0xC2:
+		case 0xE2:
+			ctx->pc += 2;
+			break;
+		case 0xFA:
+		case 0xDA:
+		case 0x7A:
+		case 0x5A:
+		case 0x3A:
+		case 0x1A:
+			ctx->pc++;
+			break;
 		default:
 			printf("ILLEGAL ARGUMENT %02X\n", op);
 			exit(0);
 			break;
 
-	}/*
+	}
 	uint8_t val = ctx->cpu_mem.get(0x6000);
 	if (val == 0x80 && !ran) {
 		ran = true;
@@ -1534,5 +1632,4 @@ void CPU::fde(State* ctx) {
 		ctx->print_state();
 		exit(0);
 	}
-	*/
 }
