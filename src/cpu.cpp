@@ -1045,6 +1045,11 @@ void INY(State* ctx) {
 
 static bool ran = false;
 void CPU::fde(State* ctx) {
+	if (ctx->cpu_mem.nmi && ctx->cpu_mem.nmi_output) {
+		puts("YOLO");
+		ctx->pc = ctx->cpu_mem.get16(0xFFFA);
+		ctx->cpu_mem.nmi = false;
+	}
 	uint8_t op = get_op(ctx);
 	switch (op) {
 		case 0x00:

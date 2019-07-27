@@ -45,7 +45,9 @@ void PPU::draw_3dots(State* ctx) {
 		y = (uint16_t)scanline;
 		x = dot++;
 		if (scanline == -1) {
+			ctx->cpu_mem.nmi = false;
 		} else if (scanline == 240) {
+			ctx->cpu_mem.nmi = true;
 		} else if (scanline > 240) {
 		} else if (dot <= scanline_dots) {
 			draw_bg(ctx, x, y);

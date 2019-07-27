@@ -75,6 +75,8 @@ public:
 	CPU_Memory(uint8_t* buff, int prg_cnt, uint8_t* OAM);
 	CPU_Memory() {};
 	uint8_t* get_PPU_regs();
+	bool nmi = false;
+	bool nmi_output = false;
 };
 
 class PPU_Memory : public Memory {

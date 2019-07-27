@@ -28,7 +28,7 @@ MemRegion* CPU_Memory::get_mem_region(uint16_t addr) {
 }
 
 void CPU_Memory::DMA(uint8_t high_byte) {
-	std::cout << "DMA" << std::endl;
+	//std::cout << "DMA" << std::endl;
 	uint16_t addr = (uint16_t)high_byte << 8;
 	MemRegion* mr;
 	uint8_t extra = 0;
@@ -45,8 +45,12 @@ void CPU_Memory::DMA(uint8_t high_byte) {
 
 uint8_t CPU_Memory:: get(uint16_t addr) {
 	MemRegion* mr = get_mem_region(addr);
-	//printf("\n%04X - %04X mod %04x = %04X\n", addr, mr->get_start(), mr->size(), (addr - mr->get_start()) % mr->size());
-	return mr->dget((addr - mr->get_start()) % mr->size());
+	uint8_t val =  mr->dget((addr - mr->get_start()) % mr->size());
+	if (addr = 0x2002) {
+		mr->dset(addr, (val & 0x80) | (nmi << 7));
+		nmi = false;
+	}
+	return val;
 }
 
 void CPU_Memory::DMA_inc(uint8_t val) {
@@ -59,28 +63,18 @@ void CPU_Memory::DMA_inc(uint8_t val) {
 
 void CPU_Memory::set(uint8_t val, uint16_t addr) {
 	MemRegion* mr = get_mem_region(addr);
-	if (addr == 0x2000) {
-		// TODO PPUCTRL
-		std::cout << "PPUCTRL" << std::endl;
-	} else if (addr == 0x2001) {
-		// TODO PPUMASK
-	} else if (addr == 0x2002) {
-		// TODO PPUSTATUS
-	} else if (addr == 0x2004) {
+	if (addr == 0x2004) {
 		// TODO OAMDATA
-		std::cout << "OAMDATA " << (int)val << std::endl;
+		//std::cout << "OAMDATA " << (int)val << std::endl;
 		DMA_inc(val);
-	} else if (addr == 0x2005) {
-		// TODO PPUSCROLL
-	} else if (addr == 0x2006) {
-		// TODO PPUADDR
-	} else if (addr == 0x2007) {
-		// TODO PPUDATA
 	} else if (addr == 0x4014) {
 		// TODO OAMDMA
 		DMA(val);
 	} else {
 		mr->dset((addr - mr->get_start()) % mr->size(), val);
+	}
+	if (addr == 0x2000) {
+		nmi_output = val >> 7;
 	}
 
 }
