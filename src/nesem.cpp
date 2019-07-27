@@ -20,8 +20,9 @@ static void file2mem(State* ctx, std::string filename) {
 	}
 	printf("%02X\n", buff[4]);
 	f.close();
-	ctx->cpu_mem = CPU_Memory(&ctx->cycles, buff, buff[4], ctx->OAM);
 	ctx->ppu_mem = PPU_Memory();
+	ctx->cpu_mem = CPU_Memory(&ctx->cycles, buff, buff[4],
+								ctx->OAM, &ctx->ppu_mem);
 }
 
 int main(int argc, char** argv) {

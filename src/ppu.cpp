@@ -5,15 +5,15 @@ uint8_t PPU::get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, bool bit
 	uint16_t a = bg ? PPUCTRL_bg_table_addr() : PPUCTRL_obj_table_addr();
 	uint16_t addr = (a | (((idx << 1) | bit) << 3) | y);
 	uint8_t val = ctx->ppu_mem.get(addr);
-	if (val)
-		printf("%02X\n", val);
+	//if (val)
+	//	printf("%02X\n", val);
 	return (val >> (7 - x)) & 0x1;
 }
 
 void PPU::draw_bg (State* ctx, uint8_t x, uint8_t y) {
 	uint8_t p = ctx->ppu_mem.get(PPUCTRL_nametable_addr() + (y/8) * 32 + (x/8));
-	if (p)
-		printf("DRAWING BG PIXEL (%02X, %02X) %02X \n", x, y, p);
+	//if (p)
+	//	printf("DRAWING BG PIXEL (%02X, %02X) %02X \n", x, y, p);
 	uint8_t color, x_fine, y_fine;
 	x_fine = x % 8;
 	y_fine = y % 8;
@@ -77,9 +77,8 @@ bool PPU::tick(State* ctx) {
 	ppu_cycles += 3;
 	draw_3dots(ctx);
 	if (ppu_cycles >= frame_dots) {
-		//puts("TICK");
 		ppu_cycles = ppu_cycles % frame_dots;
-		//disp->draw_pixel(ctx, 50, 50, 2);
+		//ctx->ppu_mem.print();
 		disp->ready();
 		disp->display(ctx);
 		if (disp->wait())

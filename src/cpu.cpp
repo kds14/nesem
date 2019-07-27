@@ -1142,8 +1142,8 @@ void CPU::fde(State* ctx) {
 		ctx->cpu_mem.nmi = false;
 	}
 	uint8_t op = get_op(ctx);
-	printf("%04X %02X %02X %02X a: %02X, y: %02X, s: %02X\t", ctx->pc, op, get_b1(ctx), get_b2(ctx), ctx->a, ctx->y, ctx->s);
-	print_stack(ctx);
+	//printf("%04X %02X %02X %02X a: %02X, y: %02X, s: %02X\t", ctx->pc, op, get_b1(ctx), get_b2(ctx), ctx->a, ctx->y, ctx->s);
+	//print_stack(ctx);
 	switch (op) {
 		case 0x00:
 			brk(ctx);
@@ -1651,7 +1651,7 @@ void CPU::fde(State* ctx) {
 			exit(0);
 			break;
 
-	}
+	}/*
 	uint8_t val = ctx->cpu_mem.get(0x6000);
 	if (val == 0x80 && !ran) {
 		ran = true;
@@ -1667,5 +1667,5 @@ void CPU::fde(State* ctx) {
 		std::cout << std::endl;
 		ctx->print_state();
 		exit(0);
-	}
+	}*/
 }
