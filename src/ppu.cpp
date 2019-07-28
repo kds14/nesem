@@ -9,13 +9,18 @@ uint8_t PPU::get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, uint8_t 
 }
 
 void PPU::draw_bg (State* ctx, uint8_t x, uint8_t y) {
-	uint8_t p = ctx->ppu_mem.get(PPUCTRL_nametable_addr() + (y/8) * 32 + (x/8));
+	uint8_t p = ctx->ppu_mem.get((PPUCTRL_nametable_addr() + (y/8) * 32 + (x/8)));
 	uint8_t color, x_fine, y_fine;
 	x_fine = x % 8;
 	y_fine = y % 8;
 	color = (get_col_bit(ctx, p, y_fine, x_fine, 1, true) << 1)
 			| get_col_bit(ctx, p, y_fine, x_fine, 0, true);
 	disp->draw_pixel(ctx, x, y, color);
+}
+
+void PPU::draw_grid(State* ctx, uint8_t x, uint8_t y) {
+	if (!(x % 8) || !(y % 8))
+		disp->draw_pixel(ctx, x, y, 3);
 }
 
 void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
@@ -66,9 +71,10 @@ bool PPU::draw_3dots(State* ctx) {
 			*PPUSTATUS |= 0x80;
 			res = true;
 		} else if (scanline > 240) {
-		} else if (scanline > -1 && dot <= scanline_dots - hblank_dots) {
+		} else if (scanline > -1 && x < scanline_dots - hblank_dots) {
 			draw_bg(ctx, x, y);
 			draw_obj(ctx, x, y);
+			//draw_grid(ctx, x, y);
 		}
 		if (dot >= scanline_dots) {
 			dot = 0;

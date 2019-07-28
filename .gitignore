@@ -1,6 +1,6 @@
 build/
 *.swp
 *.swo
-out
+out*
 perf.data*
 gmon.out

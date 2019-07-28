@@ -64,10 +64,8 @@ uint8_t CPU_Memory:: get(uint16_t addr) {
 		ppuaddr_latch = 0;
 	} else if (addr == 0x2006) {
 	} else if (addr == 0x2007) {
-		//printf("READ -- ");
 		DATA_inc(val);
 	} else if (addr == 0x4016) {
-		//printf("4016 GET\n");
 		if (ctrl_shift_strobe & 0x1) {
 			input_latch = last_inputs;
 			input_latch_shift = 0;
@@ -76,7 +74,6 @@ uint8_t CPU_Memory:: get(uint16_t addr) {
 			return 1;
 		uint8_t res = input_latch_shift ?
 				(input_latch >> input_latch_shift) & 0x1 : input_latch & 0x1;
-		//printf("GET %02X (shifts: %02X, latch: %02X)\n", res, input_latch_shift);
 		if (!(ctrl_shift_strobe & 0x1)) {
 			input_latch_shift++;
 		}
@@ -99,7 +96,6 @@ void CPU_Memory::DATA_inc(uint8_t val) {
 	ppu_mem->set(val, ppuaddr_latch);
 	auto before = ppuaddr_latch;
 	ppuaddr_latch += ((PPUCTRL >> 2) & 0x1) * 31 + 1;
-	//printf("DATA INC: %02X to %04X, INC TO %04X\n", val, before, ppuaddr_latch);
 }
 
 void CPU_Memory::set(uint8_t val, uint16_t addr) {
@@ -109,7 +105,6 @@ void CPU_Memory::set(uint8_t val, uint16_t addr) {
 	if (addr == 0x2000) {
 		nmi_output = val >> 7;
 	} else if (addr == 0x2007) {
-		//printf("WRITE -- ");
 		DATA_inc(val);
 	} else if (addr == 0x2006) {
 		ppuaddr_latch = (ppuaddr_latch << 8) | val;
@@ -121,7 +116,6 @@ void CPU_Memory::set(uint8_t val, uint16_t addr) {
 		// TODO OAMDMA
 		DMA(val);
 	} else if (addr == 0x4016) {
-		//printf("4016 SET %02X\n", val);
 		if (val & 0x1) {
 			input_latch = last_inputs;
 			input_latch_shift = 0;
@@ -169,6 +163,11 @@ uint8_t PPU_Memory::get(uint16_t addr) {
 void PPU_Memory::set(uint8_t val, uint16_t addr) {
 	auto mr = get_mem_region(addr);
 	mr->dset((addr - mr->get_start()) % mr->size(), val);
+	if (addr == 0x2190) {
+		printf("%02X\n", val);
+		if (val == 0xA5)
+			exit(0);
+	}
 }
 
 void PPU_Memory::print() {

@@ -43,7 +43,7 @@ uint8_t get_indy(State* ctx, bool p) {
 	uint8_t lo = get_b1(ctx);
 	uint8_t hi = lo + 1;
 	uint16_t addr;
-	addr = (ctx->cpu_mem.get(hi) << 8) | ctx->cpu_mem.get(lo) + ctx->y;
+	addr = ((ctx->cpu_mem.get(hi) << 8) | ctx->cpu_mem.get(lo)) + ctx->y;
 	if (p && !page_check(ctx, get_b1(ctx)))
 		 page_check(ctx, addr);
 	return ctx->cpu_mem.get(addr);
@@ -1152,7 +1152,7 @@ void CPU::fde(State* ctx) {
 		ctx->cpu_mem.nmi = false;
 	}
 	uint8_t op = get_op(ctx);
-	//printf("%04X %02X %02X %02X a: %02X, y: %02X, s: %02X\t", ctx->pc, op, get_b1(ctx), get_b2(ctx), ctx->a, ctx->y, ctx->s);
+	printf("%04X %02X %02X %02X a: %02X, y: %02X, s: %02X\n", ctx->pc, op, get_b1(ctx), get_b2(ctx), ctx->a, ctx->y, ctx->s);
 	//print_stack(ctx);
 	switch (op) {
 		case 0x00:
@@ -1660,23 +1660,5 @@ void CPU::fde(State* ctx) {
 			printf("ILLEGAL ARGUMENT %02X\n", op);
 			exit(0);
 			break;
-
-	}/*
-	uint8_t val = ctx->cpu_mem.get(0x6000);
-	if (val == 0x80 && !ran) {
-		ran = true;
-	} else if (val < 0x80 && ran) {
-		uint16_t ptr = 0x6004;
-		uint8_t c = 0;
-		do {
-			c = ctx->cpu_mem.get(ptr++);
-			if (c == 0) break;
-			printf("%c", c);
-		}
-		while (c != 0);
-		std::cout << std::endl;
-		ctx->print_state();
-		ctx->ppu_mem.print();
-		exit(0);
-	}*/
+	}
 }
