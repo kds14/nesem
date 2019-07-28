@@ -23,34 +23,45 @@ void PPU::draw_grid(State* ctx, uint8_t x, uint8_t y) {
 		disp->draw_pixel(ctx, x, y, 3);
 }
 
-void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
+void PPU::fill_sprite_cache(State* ctx, uint8_t y) {
+	sprite_cache.clear();
+	for (int i = 0; i < 64; ++i) {
+		uint8_t y_byte = ctx->OAM[i * 4];
+		if (y_byte >= 0xEF && y_byte <= 0xFF)
+			continue;
+		y_byte += 1;
+		uint8_t y_fine = y - y_byte;
+		if (y_fine >= 0 && y_fine < 8 && sprite_cache.size() < 8) {
+			Sprite s;
+			s.x = ctx->OAM[i * 4 + 3];
+			s.y = y_byte;
+			s.idx = ctx->OAM[i * 4 + 1];
+			s.attr = ctx->OAM[i * 4 + 2];
+			sprite_cache.push_back(s);
+		} else if (y_byte + 1 == y) {
+			*PPUSTATUS |= 0x20;
+			return;
+		}
+	}
+}
+
+void PPU::draw_obj(State* ctx, uint8_t x, uint8_t y) {
 #ifdef PPU_DBG
 	printf("DRAWING PIXEL (%02X, %02X)\n", x, y);
 #endif
 	uint8_t color, y_byte, x_byte, idx_byte, x_fine, y_fine, attr;
-	for (int i = 0; i < 64; ++i) {
-		y_byte = ctx->OAM[i * 4];
-		if (y_byte >= 0xEF && y_byte <= 0xFF)
-			continue;
-		y_byte += 1;
-		x_byte = ctx->OAM[i * 4 + 3];
-		idx_byte = ctx->OAM[i * 4 + 1];
-		attr = ctx->OAM[i * 4 + 2];
-		x_fine = x - x_byte;
-		y_fine = y - y_byte;
-#ifdef PPU_DBG
-		if (y_byte || x_byte || idx_byte)
-			printf("SPRITE %d (%02X %02X %02X)\n", i, y_byte, x_byte, idx_byte);
-#endif
-		if (x_fine < PPUCTRL_obj_size() && y_fine < PPUCTRL_obj_size()) {
-			if (attr & 0x40) {
+	for (auto s : sprite_cache) {
+		x_fine = x - s.x;
+		y_fine = y - s.y;
+		if (x_fine < PPUCTRL_obj_size()) {
+			if (s.attr & 0x40) {
 				x_fine = 7 - x_fine;
 			}
-			if (attr & 0x80) {
+			if (s.attr & 0x80) {
 				y_fine = 7 - y_fine;
 			}
-			color = (get_col_bit(ctx, idx_byte, y_fine, x_fine, 1, false) << 1)
-				| get_col_bit(ctx, idx_byte, y_fine, x_fine, 0, false);
+			color = (get_col_bit(ctx, s.idx, y_fine, x_fine, 1, false) << 1)
+				| get_col_bit(ctx, s.idx, y_fine, x_fine, 0, false);
 			if (color != 0)
 				disp->draw_pixel(ctx, x, y, color);
 		}
@@ -70,7 +81,7 @@ bool PPU::draw_3dots(State* ctx) {
 			ctx->cpu_mem.nmi = true;
 			*PPUSTATUS |= 0x80;
 			res = true;
-		} else if (scanline > 240) {
+		} else if (scanline >= 240) {
 		} else if (scanline > -1 && x < scanline_dots - hblank_dots) {
 			draw_bg(ctx, x, y);
 			draw_obj(ctx, x, y);
@@ -79,7 +90,10 @@ bool PPU::draw_3dots(State* ctx) {
 		if (dot >= scanline_dots) {
 			dot = 0;
 			scanline = (int)(scanline + 1) >= 262 ? -1 : scanline + 1;
-			//draw_scanline(ctx, y);
+			if (scanline > -1 && scanline < 240)
+				fill_sprite_cache(ctx, scanline);
+			else
+				sprite_cache.clear();
 		}
 #ifdef PPU_DBG
 		std::cout << "SCANLINE: " << (int)scanline << std::endl;

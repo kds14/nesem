@@ -135,9 +135,14 @@ bool Display::poll(State* ctx) {
 }
 
 bool Display::wait(State* ctx) {
-	double base = 16.67L - SDL_GetTicks() + frame_time + rem;
+	if (!frame_time) {
+		frame_time = SDL_GetTicks();
+		return poll(ctx);
+	}
+	double base = 16.67L - (SDL_GetTicks() - frame_time) + rem;
 	int wait = base;
-	rem = base - wait;	
+	rem = base - wait;
+	printf("wait %d\n", wait);
 	if (poll(ctx))
 		return true;
 	if (wait > 0)

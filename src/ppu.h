@@ -3,6 +3,11 @@
 
 #include "nesem.h"
 #include "disp.h"
+#include <vector>
+
+struct Sprite {
+	uint8_t x, y, idx, attr;
+};
 
 class PPU {
 private:
@@ -31,11 +36,13 @@ private:
 	int scanline;
 	uint16_t dot;
 	bool draw_3dots(State* ctx);
+	std::vector<Sprite> sprite_cache;
 	void draw_bg(State* ctx, uint8_t x, uint8_t y);
 	void draw_obj(State* ctx, uint8_t x, uint8_t y);
 	void draw_grid(State* ctx, uint8_t x, uint8_t y);
-	//void draw_scanline(State* ctx, uint8_t y);
-	uint8_t get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, uint8_t bit, bool bg);
+	uint8_t get_col_bit(State* ctx, uint8_t idx, uint8_t y,
+						uint8_t x, uint8_t bit, bool bg);
+	void fill_sprite_cache(State* ctx, uint8_t y);
 public:
 	bool tick(State* ctx);
 	PPU(uint8_t* register_start, Display* disp);
