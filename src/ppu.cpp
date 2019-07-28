@@ -15,7 +15,6 @@ void PPU::draw_bg (State* ctx, uint8_t x, uint8_t y) {
 	y_fine = y % 8;
 	color = (get_col_bit(ctx, p, y_fine, x_fine, 1, true) << 1)
 			| get_col_bit(ctx, p, y_fine, x_fine, 0, true);
-	printf("DRAWING BG PIXEL (%02X, %02X) (%d, %d) %02X color: %02X \n", x, y, x, y, p, color);
 	disp->draw_pixel(ctx, x, y, color);
 }
 
@@ -80,7 +79,7 @@ bool PPU::tick(State* ctx) {
 	if (draw_3dots(ctx)) {
 		disp->ready();
 		disp->display(ctx);
-		if (disp->wait())
+		if (disp->wait(ctx))
 			return true;
 	}
 	return false;

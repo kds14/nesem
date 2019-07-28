@@ -85,15 +85,48 @@ void Display::kill() {
 	SDL_Quit();
 }
 
-bool Display::wait() {
+bool Display::wait(State* ctx) {
 	SDL_Event event;
 	double base = 16.67L - SDL_GetTicks() + frame_time + rem;
 	int wait = base;
 	rem = base - wait;	
-
+	uint8_t inputs = 0;
 	if (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT)
 			return true;
+		else if (event.type == SDL_KEYDOWN) {
+			switch (event.key.keysym.sym) {
+			case SDLK_RIGHT:
+				inputs |= 0x80;
+				break;
+			case SDLK_LEFT:
+				inputs |= 0x40;
+				break;
+			case SDLK_DOWN:
+				inputs |= 0x20;
+				break;
+			case SDLK_UP:
+				inputs |= 0x10;
+				break;
+			case SDLK_RETURN:
+			case SDLK_SPACE:
+				inputs |= 0x08;
+				break;
+			case SDLK_RSHIFT:
+			case SDLK_LSHIFT:
+				inputs |= 0x04;
+				break;
+			case SDLK_z:
+				inputs |= 0x02;
+				break;
+			case SDLK_x:
+				inputs |= 0x01;
+				break;
+			default:
+				break;
+			}
+			ctx->cpu_mem.last_inputs = inputs;
+		}
 	}
 	if (wait > 0)
 		SDL_Delay(wait);

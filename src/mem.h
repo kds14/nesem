@@ -91,6 +91,9 @@ private:
 	uint64_t* cycles;
 	uint16_t ppuaddr_latch = 0;
 	PPU_Memory* ppu_mem;
+	uint8_t input_latch_shift = 0;
+	uint8_t ctrl_shift_strobe = 0;
+	uint8_t input_latch = 0;
 public:
 	uint8_t get(uint16_t addr);
 	void set(uint8_t val, uint16_t addr);
@@ -100,6 +103,7 @@ public:
 	uint8_t* get_PPU_regs();
 	bool nmi = false;
 	bool nmi_output = false;
+	uint8_t last_inputs = 0;
 };
 
 

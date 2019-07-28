@@ -18,7 +18,7 @@ private:
 public:
 	bool init(State* ctx, int scale_factor);
 	void kill();
-	bool wait();
+	bool wait(State* ctx);
 	void display(State* ctx);
 	void ready();
 	void draw_pixel(State* ctx, int x, int y, uint8_t color);
