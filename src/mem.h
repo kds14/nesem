@@ -59,8 +59,7 @@ public:
 
 class PPU_Memory : public Memory {
 private:
-	MemRegion ptable0;
-	MemRegion ptable1;
+	MemRegion ptable;
 	MemRegion ntable0;
 	MemRegion ntable1;
 	MemRegion ntable2;
@@ -70,7 +69,8 @@ private:
 public:
 	uint8_t get(uint16_t addr);
 	void set(uint8_t val, uint16_t addr);
-	PPU_Memory();
+	PPU_Memory(uint8_t* chr_buff);
+	PPU_Memory() {};
 	void print();
 };
 

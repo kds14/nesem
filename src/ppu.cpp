@@ -78,7 +78,6 @@ bool PPU::tick(State* ctx) {
 	draw_3dots(ctx);
 	if (ppu_cycles >= frame_dots) {
 		ppu_cycles = ppu_cycles % frame_dots;
-		//ctx->ppu_mem.print();
 		disp->ready();
 		disp->display(ctx);
 		if (disp->wait())

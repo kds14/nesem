@@ -10,19 +10,36 @@
 
 static void file2mem(State* ctx, std::string filename) {
 	std::ifstream f(filename, std::ios::binary);
+	if (!f) {
+		std::cout << "Failed to open file" << std::endl;
+		exit(0);
+	}
 	f.seekg(0, std::ios::end);
 	std::streamsize sz = f.tellg();
 	f.seekg(0, std::ios::beg);
-	uint8_t* buff = new uint8_t[sz]();
-	if (!f.read((char*)buff, sz)) {
-		std::cout << "Failed to read file" << std::endl;
+	uint8_t* header = new uint8_t[16]();
+	if (!f.read((char*)header, 16)) {
+		std::cout << "Failed to read header" << std::endl;
 		exit(0);
 	}
-	printf("%02X\n", buff[4]);
+	uint16_t prg_rom_size = header[4] * 16384;
+	uint16_t chr_rom_size = header[5] * 8192;
+	uint8_t mapper = (header[7] & 0xF0) | (header[6] >> 4);
+	uint8_t* prg_buff = new uint8_t[prg_rom_size]();
+	if (!f.read((char*)prg_buff, prg_rom_size)) {
+		std::cout << "Failed to read prg" << std::endl;
+		exit(0);
+	}
+	uint8_t* chr_buff = new uint8_t[chr_rom_size]();
+	if (!f.read((char*)chr_buff, chr_rom_size)) {
+		std::cout << "Failed to read chr" << std::endl;
+		exit(0);
+	}
 	f.close();
-	ctx->ppu_mem = PPU_Memory();
-	ctx->cpu_mem = CPU_Memory(&ctx->cycles, buff, buff[4],
-								ctx->OAM, &ctx->ppu_mem);
+	ctx->ppu_mem = PPU_Memory(chr_buff);
+	ctx->cpu_mem = CPU_Memory(&ctx->cycles, prg_buff, header[4],
+			ctx->OAM, &ctx->ppu_mem);
+	free(header);
 }
 
 int main(int argc, char** argv) {
