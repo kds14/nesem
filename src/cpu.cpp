@@ -33,11 +33,17 @@ uint16_t get_16(State* ctx) {
 }
 
 uint8_t get_indx(State* ctx) {
-	return ctx->cpu_mem.get(get_ind(ctx, get_b1(ctx) + ctx->x));
+	uint8_t lo = get_b1(ctx) + ctx->x;
+	uint8_t hi = get_b1(ctx) + ctx->x + 1;
+	uint16_t addr = (ctx->cpu_mem.get(hi) << 8) | ctx->cpu_mem.get(lo);
+	return ctx->cpu_mem.get(addr);
 }
 
 uint8_t get_indy(State* ctx, bool p) {
-	uint16_t addr = get_ind(ctx, get_b1(ctx)) + ctx->y;
+	uint8_t lo = get_b1(ctx);
+	uint8_t hi = lo + 1;
+	uint16_t addr;
+	addr = (ctx->cpu_mem.get(hi) << 8) | ctx->cpu_mem.get(lo) + ctx->y;
 	if (p && !page_check(ctx, get_b1(ctx)))
 		 page_check(ctx, addr);
 	return ctx->cpu_mem.get(addr);
@@ -48,11 +54,15 @@ uint8_t get_indy(State* ctx) {
 }
 
 uint16_t get_indx_ptr(State* ctx) {
-	return get_ind(ctx, get_b1(ctx) + ctx->x);
+	uint8_t lo = get_b1(ctx) + ctx->x;
+	uint8_t hi = get_b1(ctx) + ctx->x + 1;
+	return (ctx->cpu_mem.get(hi) << 8) | ctx->cpu_mem.get(lo);
 }
 
 uint16_t get_indy_ptr(State* ctx) {
-	return get_ind(ctx, get_b1(ctx)) + ctx->y;
+	uint8_t lo = get_b1(ctx);
+	uint8_t hi = lo + 1;
+	return (ctx->cpu_mem.get(hi) << 8) | ctx->cpu_mem.get(lo) + ctx->y;
 }
 
 uint8_t get_zp(State* ctx) {
@@ -733,8 +743,8 @@ void AND_abs(State* ctx) {
 }
 
 void AND_absx(State* ctx) {
-	ctx->pc += 3;
 	AND(ctx, get_absx(ctx, true));
+	ctx->pc += 3;
 	ctx->cycles += 4;
 }
 
@@ -800,8 +810,8 @@ void CMP_abs(State* ctx, uint8_t reg) {
 }
 
 void CMP_absx(State* ctx) {
-	ctx->pc += 3;
 	CMP(ctx, get_absx(ctx, true), ctx->a);
+	ctx->pc += 3;
 	ctx->cycles += 4;
 }
 
