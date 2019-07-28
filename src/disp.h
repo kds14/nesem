@@ -12,7 +12,7 @@ private:
 	void clear_texture(State* ctx);
 	void lock_texture(State* ctx);
 	void clear();
-	uint32_t colors[4];
+	uint32_t colors[0x40];
 	double rem = 0;
 	uint64_t frame_time = 0;
 	bool poll(State* ctx);

@@ -64,10 +64,73 @@ bool Display::init(State* ctx, int scale_factor) {
 
 			SDL_PixelFormat* format = SDL_AllocFormat(SDL_GetWindowPixelFormat(window));
 
-			colors[0] = SDL_MapRGB(format, WHITE, WHITE, WHITE);
-			colors[1] = SDL_MapRGB(format, LIGHT_GRAY, LIGHT_GRAY, LIGHT_GRAY);
-			colors[2] = SDL_MapRGB(format, DARK_GRAY, DARK_GRAY, DARK_GRAY);
-			colors[3] = SDL_MapRGB(format, BLACK, BLACK, BLACK);
+			colors[0] = SDL_MapRGB(format, 84, 84, 84);
+			colors[1] = SDL_MapRGB(format, 0, 30, 116);
+			colors[2] = SDL_MapRGB(format, 8, 16, 114);
+			colors[3] = SDL_MapRGB(format, 48, 0, 136);
+			colors[4] = SDL_MapRGB(format, 68, 0, 100);
+			colors[5] = SDL_MapRGB(format, 92, 0, 48);
+			colors[6] = SDL_MapRGB(format, 84, 4, 0);
+			colors[7] = SDL_MapRGB(format, 60, 24, 0);
+			colors[8] = SDL_MapRGB(format, 32, 42, 0);
+			colors[9] = SDL_MapRGB(format, 8, 58, 0);
+			colors[10] = SDL_MapRGB(format, 0, 64, 0);
+			colors[11] = SDL_MapRGB(format, 0, 60, 0);
+			colors[12] = SDL_MapRGB(format, 0, 50, 60);
+			colors[13] = SDL_MapRGB(format, 0, 0, 0);
+			colors[14] = SDL_MapRGB(format, 0, 0, 0);
+			colors[15] = SDL_MapRGB(format, 0, 0, 0);
+
+			colors[16] = SDL_MapRGB(format, 152, 150, 152);
+			colors[17] = SDL_MapRGB(format, 8, 76, 196);
+			colors[18] = SDL_MapRGB(format, 48, 50, 236);
+			colors[19] = SDL_MapRGB(format, 92, 30, 228);
+			colors[20] = SDL_MapRGB(format, 136, 20, 176);
+			colors[21] = SDL_MapRGB(format, 160, 20, 100);
+			colors[22] = SDL_MapRGB(format, 152, 34, 32);
+			colors[23] = SDL_MapRGB(format, 120, 60, 0);
+			colors[24] = SDL_MapRGB(format, 84, 90, 0);
+			colors[25] = SDL_MapRGB(format, 40, 114, 0);
+			colors[26] = SDL_MapRGB(format, 8, 124, 0);
+			colors[27] = SDL_MapRGB(format, 0, 118, 40);
+			colors[28] = SDL_MapRGB(format, 0, 102, 120);
+			colors[29] = SDL_MapRGB(format, 0, 0, 0);
+			colors[30] = SDL_MapRGB(format, 0, 0, 0);
+			colors[31] = SDL_MapRGB(format, 0, 0, 0);
+
+			colors[32] = SDL_MapRGB(format, 236, 238, 236);
+			colors[33] = SDL_MapRGB(format, 76, 154, 236);
+			colors[34] = SDL_MapRGB(format, 120, 124, 236);
+			colors[35] = SDL_MapRGB(format, 176, 98, 236);
+			colors[36] = SDL_MapRGB(format, 228, 84, 236);
+			colors[37] = SDL_MapRGB(format, 236, 88, 180);
+			colors[38] = SDL_MapRGB(format, 236, 106, 100);
+			colors[39] = SDL_MapRGB(format, 212, 136, 32);
+			colors[40] = SDL_MapRGB(format, 160, 170, 0);
+			colors[41] = SDL_MapRGB(format, 116, 196, 0);
+			colors[42] = SDL_MapRGB(format, 76, 208, 32);
+			colors[43] = SDL_MapRGB(format, 56, 204, 108);
+			colors[44] = SDL_MapRGB(format, 56, 180, 204);
+			colors[45] = SDL_MapRGB(format, 60, 60, 60);
+			colors[46] = SDL_MapRGB(format, 0, 0, 0);
+			colors[47] = SDL_MapRGB(format, 0, 0, 0);
+
+			colors[48] = SDL_MapRGB(format, 236, 238, 236);
+			colors[49] = SDL_MapRGB(format, 168, 204, 236);
+			colors[50] = SDL_MapRGB(format, 188, 188, 236);
+			colors[51] = SDL_MapRGB(format, 212, 178, 236);
+			colors[52] = SDL_MapRGB(format, 236, 174, 236);
+			colors[53] = SDL_MapRGB(format, 236, 174, 212);
+			colors[54] = SDL_MapRGB(format, 236, 180, 176);
+			colors[55] = SDL_MapRGB(format, 228, 196, 144);
+			colors[56] = SDL_MapRGB(format, 204, 210, 120);
+			colors[57] = SDL_MapRGB(format, 180, 222, 120);
+			colors[58] = SDL_MapRGB(format, 168, 226, 144);
+			colors[59] = SDL_MapRGB(format, 152, 226, 180);
+			colors[60] = SDL_MapRGB(format, 160, 214, 228);
+			colors[61] = SDL_MapRGB(format, 160, 162, 160);
+			colors[62] = SDL_MapRGB(format, 0, 0, 0);
+			colors[63] = SDL_MapRGB(format, 0, 0, 0);
 
 			lock_texture(ctx);
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -142,7 +205,6 @@ bool Display::wait(State* ctx) {
 	double base = 16.67L - (SDL_GetTicks() - frame_time) + rem;
 	int wait = base;
 	rem = base - wait;
-	printf("wait %d\n", wait);
 	if (poll(ctx))
 		return true;
 	if (wait > 0)

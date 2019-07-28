@@ -9,12 +9,37 @@ uint8_t PPU::get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, uint8_t 
 }
 
 void PPU::draw_bg (State* ctx, uint8_t x, uint8_t y) {
-	uint8_t p = ctx->ppu_mem.get((PPUCTRL_nametable_addr() + (y/8) * 32 + (x/8)));
+	uint16_t offset = (y/8) * 32 + (x/8);
+	uint8_t p = ctx->ppu_mem.get((PPUCTRL_nametable_addr() + offset));
 	uint8_t color, x_fine, y_fine;
 	x_fine = x % 8;
 	y_fine = y % 8;
 	color = (get_col_bit(ctx, p, y_fine, x_fine, 1, true) << 1)
 			| get_col_bit(ctx, p, y_fine, x_fine, 0, true);
+	if (!color) {
+		disp->draw_pixel(ctx, x, y, ctx->ppu_mem.get(0x3F00));
+		return;
+	}
+	uint8_t attr_y = (y / 16) / 2;
+	uint8_t attr_x = (x / 16) / 2;
+	uint16_t attr = PPUCTRL_nametable_addr() + 0x3C0 + attr_y * 8 + attr_x;
+	uint8_t attr_byte = ctx->ppu_mem.get(attr);
+	uint8_t palette;
+	if ((y/16) % 2) {
+		if ((x/16) % 2) {
+			palette = attr_byte >> 6;
+		} else {
+			palette = (attr_byte >> 4) & 0x3;
+		}
+	} else {
+		if ((x/16) % 2) {
+			palette = (attr_byte >> 2) & 0x3;
+		} else {
+			palette = attr_byte & 0x3;
+		}
+	}
+	uint16_t palette_addr = 0x3F01 + (palette * 4);
+	color = ctx->ppu_mem.get(palette_addr + color - 1);
 	disp->draw_pixel(ctx, x, y, color);
 }
 
@@ -62,8 +87,11 @@ void PPU::draw_obj(State* ctx, uint8_t x, uint8_t y) {
 			}
 			color = (get_col_bit(ctx, s.idx, y_fine, x_fine, 1, false) << 1)
 				| get_col_bit(ctx, s.idx, y_fine, x_fine, 0, false);
-			if (color != 0)
+			if (color != 0) {
+				uint16_t palette_addr = 0x3F11 + ((s.attr & 0x3) * 4);
+				color = ctx->ppu_mem.get(palette_addr + color - 1);
 				disp->draw_pixel(ctx, x, y, color);
+			}
 		}
 	}
 }
