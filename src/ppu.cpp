@@ -22,7 +22,7 @@ void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
 #ifdef PPU_DBG
 	printf("DRAWING PIXEL (%02X, %02X)\n", x, y);
 #endif
-	uint8_t color, y_byte, x_byte, idx_byte, x_fine, y_fine;
+	uint8_t color, y_byte, x_byte, idx_byte, x_fine, y_fine, attr;
 	for (int i = 0; i < 64; ++i) {
 		y_byte = ctx->OAM[i * 4];
 		if (y_byte >= 0xEF && y_byte <= 0xFF)
@@ -30,13 +30,20 @@ void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
 		y_byte += 1;
 		x_byte = ctx->OAM[i * 4 + 3];
 		idx_byte = ctx->OAM[i * 4 + 1];
+		attr = ctx->OAM[i * 4 + 2];
 		x_fine = x - x_byte;
 		y_fine = y - y_byte;
 #ifdef PPU_DBG
 		if (y_byte || x_byte || idx_byte)
 			printf("SPRITE %d (%02X %02X %02X)\n", i, y_byte, x_byte, idx_byte);
 #endif
-		if (x_fine <= PPUCTRL_obj_size() && y_fine <= PPUCTRL_obj_size()) {
+		if (x_fine < PPUCTRL_obj_size() && y_fine < PPUCTRL_obj_size()) {
+			if (attr & 0x40) {
+				x_fine = 7 - x_fine;
+			}
+			if (attr & 0x80) {
+				y_fine = 7 - y_fine;
+			}
 			color = (get_col_bit(ctx, idx_byte, y_fine, x_fine, 1, false) << 1)
 				| get_col_bit(ctx, idx_byte, y_fine, x_fine, 0, false);
 			if (color != 0)
