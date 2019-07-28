@@ -30,7 +30,7 @@ void Display::lock_texture(State* ctx) {
 void Display::draw_pixel(State* ctx, int x, int y, uint8_t color) {
 	if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT)
 		return;
-	ctx->pixels[SCREEN_HEIGHT * y + x] = colors[color];
+	ctx->pixels[SCREEN_WIDTH * y + x] = colors[color];
 }
 
 void Display::ready() {

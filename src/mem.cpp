@@ -2,11 +2,10 @@
 #include <iostream>
 
 void MemRegion::print() {
-	printf("%04X: ", start);
 	for (uint16_t i = 0; i < sz; ++i) {
-		printf("%02X ", mem[i]);
-		if (i && !(i % 16) && i != sz - 1)
+		if (!(i % 16))
 			printf("\n%04X: ", start + i);
+		printf("%02X ", mem[i]);
 	}
 	puts("");
 }
@@ -65,6 +64,7 @@ uint8_t CPU_Memory:: get(uint16_t addr) {
 		ppuaddr_latch = 0;
 	} else if (addr == 0x2006) {
 	} else if (addr == 0x2007) {
+		//printf("READ -- ");
 		DATA_inc(val);
 	}
 	return val;
@@ -81,8 +81,10 @@ void CPU_Memory::DMA_inc(uint8_t val) {
 void CPU_Memory::DATA_inc(uint8_t val) {
 	auto reg_mr = get_mem_region(0x2000);
 	uint8_t PPUCTRL = reg_mr->get(0x2000);
-	ppu_mem->set(ppuaddr_latch, val);
+	ppu_mem->set(val, ppuaddr_latch);
+	auto before = ppuaddr_latch;
 	ppuaddr_latch += ((PPUCTRL >> 2) & 0x1) * 31 + 1;
+	//printf("DATA INC: %02X to %04X, INC TO %04X\n", val, before, ppuaddr_latch);
 }
 
 void CPU_Memory::set(uint8_t val, uint16_t addr) {
@@ -92,10 +94,10 @@ void CPU_Memory::set(uint8_t val, uint16_t addr) {
 	if (addr == 0x2000) {
 		nmi_output = val >> 7;
 	} else if (addr == 0x2007) {
+		//printf("WRITE -- ");
 		DATA_inc(val);
 	} else if (addr == 0x2006) {
 		ppuaddr_latch = (ppuaddr_latch << 8) | val;
-		//ppu_mem->print();
 	} else if (addr == 0x2004) {
 		// TODO OAMDATA
 		//std::cout << "OAMDATA " << (int)val << std::endl;

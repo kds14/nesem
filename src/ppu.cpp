@@ -1,26 +1,29 @@
 #include "ppu.h"
 //#define PPU_DBG
 
-uint8_t PPU::get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, bool bit, bool bg) {
+uint8_t PPU::get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, uint8_t bit, bool bg) {
 	uint16_t a = bg ? PPUCTRL_bg_table_addr() : PPUCTRL_obj_table_addr();
-	uint16_t addr = (a | (((idx << 1) | bit) << 3) | y);
+	uint16_t addr = a | ((((idx << 1) | bit) << 3) | y);
 	uint8_t val = ctx->ppu_mem.get(addr);
-	//if (val)
-	//	printf("%02X\n", val);
+	if (bg && idx == 0x31) {
+		puts("---");
+		printf("PPUCTRL ADDR:: %04X, bit: %02X, y_fine: %02X x_fine: %02X\n", a, bit, y, x);
+		printf("ADDR: %04X, VAL: %02X\n", addr, val);
+		printf("RES: %02X\n", (val >> (7 - x)) & 0x1);
+		puts("---");
+	}
 	return (val >> (7 - x)) & 0x1;
 }
 
 void PPU::draw_bg (State* ctx, uint8_t x, uint8_t y) {
 	uint8_t p = ctx->ppu_mem.get(PPUCTRL_nametable_addr() + (y/8) * 32 + (x/8));
-	//if (p)
-	//	printf("DRAWING BG PIXEL (%02X, %02X) %02X \n", x, y, p);
 	uint8_t color, x_fine, y_fine;
 	x_fine = x % 8;
 	y_fine = y % 8;
 	color = (get_col_bit(ctx, p, y_fine, x_fine, 1, true) << 1)
 			| get_col_bit(ctx, p, y_fine, x_fine, 0, true);
-	if (color)
-		disp->draw_pixel(ctx, x, y, color);
+	printf("DRAWING BG PIXEL (%02X, %02X) (%d, %d) %02X color: %02X \n", x, y, x, y, p, color);
+	disp->draw_pixel(ctx, x, y, color);
 }
 
 void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
@@ -46,8 +49,9 @@ void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
 	}
 }
 
-void PPU::draw_3dots(State* ctx) {
+bool PPU::draw_3dots(State* ctx) {
 	uint16_t x, y;
+	bool res = false;
 	for (int i = 0; i < 3; ++i) {
 		y = (uint16_t)scanline;
 		x = dot++;
@@ -57,10 +61,11 @@ void PPU::draw_3dots(State* ctx) {
 		} else if (scanline == 241 && dot == 1) {
 			ctx->cpu_mem.nmi = true;
 			*PPUSTATUS |= 0x80;
+			res = true;
 		} else if (scanline > 240) {
-		} else if (scanline > -1 && dot <= scanline_dots) {
+		} else if (scanline > -1 && dot <= scanline_dots - hblank_dots) {
 			draw_bg(ctx, x, y);
-			draw_obj(ctx, x, y);
+			//draw_obj(ctx, x, y);
 		}
 		if (dot >= scanline_dots) {
 			dot = 0;
@@ -71,13 +76,11 @@ void PPU::draw_3dots(State* ctx) {
 		std::cout << "SCANLINE: " << (int)scanline << std::endl;
 #endif
 	}
+	return res;
 }
 
 bool PPU::tick(State* ctx) {
-	ppu_cycles += 3;
-	draw_3dots(ctx);
-	if (ppu_cycles >= frame_dots) {
-		ppu_cycles = ppu_cycles % frame_dots;
+	if (draw_3dots(ctx)) {
 		disp->ready();
 		disp->display(ctx);
 		if (disp->wait())

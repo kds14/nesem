@@ -1666,6 +1666,7 @@ void CPU::fde(State* ctx) {
 		while (c != 0);
 		std::cout << std::endl;
 		ctx->print_state();
+		ctx->ppu_mem.print();
 		exit(0);
 	}*/
 }
