@@ -5,13 +5,6 @@ uint8_t PPU::get_col_bit(State* ctx, uint8_t idx, uint8_t y, uint8_t x, uint8_t 
 	uint16_t a = bg ? PPUCTRL_bg_table_addr() : PPUCTRL_obj_table_addr();
 	uint16_t addr = a | ((((idx << 1) | bit) << 3) | y);
 	uint8_t val = ctx->ppu_mem.get(addr);
-	if (bg && idx == 0x31) {
-		puts("---");
-		printf("PPUCTRL ADDR:: %04X, bit: %02X, y_fine: %02X x_fine: %02X\n", a, bit, y, x);
-		printf("ADDR: %04X, VAL: %02X\n", addr, val);
-		printf("RES: %02X\n", (val >> (7 - x)) & 0x1);
-		puts("---");
-	}
 	return (val >> (7 - x)) & 0x1;
 }
 
@@ -33,6 +26,9 @@ void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
 	uint8_t color, y_byte, x_byte, idx_byte, x_fine, y_fine;
 	for (int i = 0; i < 64; ++i) {
 		y_byte = ctx->OAM[i * 4];
+		if (y_byte >= 0xEF && y_byte <= 0xFF)
+			continue;
+		y_byte += 1;
 		x_byte = ctx->OAM[i * 4 + 3];
 		idx_byte = ctx->OAM[i * 4 + 1];
 		x_fine = x - x_byte;
@@ -44,7 +40,8 @@ void PPU::draw_obj (State* ctx, uint8_t x, uint8_t y) {
 		if (x_fine <= PPUCTRL_obj_size() && y_fine <= PPUCTRL_obj_size()) {
 			color = (get_col_bit(ctx, idx_byte, y_fine, x_fine, 1, false) << 1)
 				| get_col_bit(ctx, idx_byte, y_fine, x_fine, 0, false);
-			disp->draw_pixel(ctx, x, y, color);
+			if (color != 0)
+				disp->draw_pixel(ctx, x, y, color);
 		}
 	}
 }
@@ -65,7 +62,7 @@ bool PPU::draw_3dots(State* ctx) {
 		} else if (scanline > 240) {
 		} else if (scanline > -1 && dot <= scanline_dots - hblank_dots) {
 			draw_bg(ctx, x, y);
-			//draw_obj(ctx, x, y);
+			draw_obj(ctx, x, y);
 		}
 		if (dot >= scanline_dots) {
 			dot = 0;
