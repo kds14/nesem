@@ -76,7 +76,7 @@ uint8_t CPU_Memory:: get(uint16_t addr) {
 			return 1;
 		uint8_t res = input_latch_shift ?
 				(input_latch >> input_latch_shift) & 0x1 : input_latch & 0x1;
-		printf("GET %02X (shifts: %02X, latch: %02X)\n", res, input_latch_shift);
+		//printf("GET %02X (shifts: %02X, latch: %02X)\n", res, input_latch_shift);
 		if (!(ctrl_shift_strobe & 0x1)) {
 			input_latch_shift++;
 		}
@@ -121,7 +121,7 @@ void CPU_Memory::set(uint8_t val, uint16_t addr) {
 		// TODO OAMDMA
 		DMA(val);
 	} else if (addr == 0x4016) {
-		printf("4016 SET %02X\n", val);
+		//printf("4016 SET %02X\n", val);
 		if (val & 0x1) {
 			input_latch = last_inputs;
 			input_latch_shift = 0;

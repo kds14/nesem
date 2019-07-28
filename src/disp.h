@@ -15,6 +15,7 @@ private:
 	uint32_t colors[4];
 	double rem = 0;
 	uint32_t frame_time = 0;
+	bool poll(State* ctx);
 public:
 	bool init(State* ctx, int scale_factor);
 	void kill();
