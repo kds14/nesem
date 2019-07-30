@@ -205,6 +205,8 @@ bool Display::wait(State* ctx) {
 	double base = 16.67L - (SDL_GetTicks() - frame_time) + rem;
 	int wait = base;
 	rem = base - wait;
+	if (rem < 0)
+		rem = 0;
 	if (poll(ctx))
 		return true;
 	if (wait > 0)

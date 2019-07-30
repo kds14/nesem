@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 	std::unique_ptr<Display> disp = std::make_unique<Display>();
 	file2mem(ctx.get(), argv[1]);
 	std::unique_ptr<CPU> cpu = std::make_unique<CPU>();
-	disp->init(ctx.get(), 2);
+	disp->init(ctx.get(), 1);
 	std::unique_ptr<PPU> ppu = std::make_unique<PPU>(ctx->cpu_mem.get_PPU_regs(), disp.get());
 
 	ctx->pc = ctx->cpu_mem.get16(0xFFFC);
